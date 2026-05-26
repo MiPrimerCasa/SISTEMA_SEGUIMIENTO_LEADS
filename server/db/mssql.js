@@ -82,14 +82,14 @@ export function normalizeCategoria(categoria) {
 }
 
 /**
- * Regla DBA: idSupervisor === idVendedor → supervisor; si son distintos → promotor.
- * @returns {'supervisor'|'promotor'|null} null si faltan ids para comparar
+ * Regla de negocio (ids del SP de encuestas):
+ * idOperador (login) === idVendedor (fila encuesta) → supervisor; si no → promotor.
  */
-export function mapOperadorIdsToRol(idSupervisor, idVendedor, idOperador) {
-  const sup = parseIdEntero(idSupervisor);
-  const ven = parseIdEntero(idVendedor) ?? parseIdEntero(idOperador);
-  if (sup == null || ven == null) return null;
-  return sup === ven ? 'supervisor' : 'promotor';
+export function mapOperadorVendedorToRol(idOperador, idVendedor) {
+  const op = parseIdEntero(idOperador);
+  const ven = parseIdEntero(idVendedor);
+  if (op == null || ven == null) return null;
+  return op === ven ? 'supervisor' : 'promotor';
 }
 
 /** Respaldo si el SP aún no devuelve idSupervisor / idVendedor. */
@@ -134,17 +134,13 @@ export function mapOperadorRow(row) {
 
   if (!idOperador && !loginId) return null;
 
-  const rolPorIds = mapOperadorIdsToRol(idSupervisor, idVendedor, idOperador);
-  const rol = rolPorIds ?? mapCategoriaToRol(categoria);
-  const idEncuestas = parseIdEntero(idVendedor) ?? parseIdEntero(idOperador);
-
   return {
-    id: String(idEncuestas ?? idOperador ?? loginId),
-    nombre: String(nombre),
-    rol,
-    rolOrigen: rolPorIds ? 'ids' : 'categoria',
-    categoria: categoria ? String(categoria) : undefined,
-    loginId: loginId ? String(loginId) : undefined,
+    id: String(idOperador ?? loginId),
+    nombre: String(nombre).trim(),
+    rol: mapCategoriaToRol(categoria),
+    rolOrigen: 'categoria',
+    categoria: categoria ? String(categoria).trim() : undefined,
+    loginId: loginId ? String(loginId).trim() : undefined,
     idOperador: idOperador != null ? String(idOperador) : undefined,
     idSupervisor: idSupervisor != null ? String(idSupervisor) : undefined,
     idVendedor: idVendedor != null ? String(idVendedor) : undefined,
@@ -153,8 +149,9 @@ export function mapOperadorRow(row) {
 
 /**
  * exec [dbo].[operadorAccesoCategoria] @LoginID, @PasID
+ * @returns {{ raw: object, mapped: object } | null}
  */
-export async function verifyLoginSqlServer(loginId, password) {
+export async function fetchLoginOperadorRaw(loginId, password) {
   const dbPool = await getSqlPool();
   const proc = getSqlServerProcedureName();
   const paramUser = process.env.SP_LOGIN_PARAM_USER || 'LoginID';
@@ -169,7 +166,17 @@ export async function verifyLoginSqlServer(loginId, password) {
   const row = rows[0];
   if (!row) return null;
 
-  return mapOperadorRow(row);
+  const raw = Object.fromEntries(
+    Object.entries(row).map(([k, v]) => [k, v instanceof Date ? v.toISOString() : v]),
+  );
+  const mapped = mapOperadorRow(row);
+  return { raw, mapped, columnas: Object.keys(row) };
+}
+
+/** Solo el usuario mapeado (uso en API). */
+export async function verifyLoginSqlServer(loginId, password) {
+  const data = await fetchLoginOperadorRaw(loginId, password);
+  return data?.mapped ?? null;
 }
 
 /** Ping liviano para /api/health en producción. */

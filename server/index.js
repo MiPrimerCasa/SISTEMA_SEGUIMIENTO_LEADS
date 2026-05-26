@@ -7,6 +7,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   buildPromotoresFromLeads,
+  enrichOperadorRolDesdeEncuestas,
   listLeadsFromEncuestas,
   updateLeadSeguimientoEncuesta,
 } from './db/encuestas.js';
@@ -60,10 +61,11 @@ app.post('/api/auth/login', async (req, res) => {
   const { usuario, password } = parsed.data;
 
   try {
-    const user = await verifyLoginSqlServer(usuario, password);
+    let user = await verifyLoginSqlServer(usuario, password);
     if (!user) {
       return res.status(401).json({ message: 'Usuario o contraseña incorrectos.' });
     }
+    user = await enrichOperadorRolDesdeEncuestas(user);
     return res.json({
       token: `sql-${user.id}`,
       usuario: {

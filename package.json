@@ -16,7 +16,9 @@
     "preview": "vite preview",
     "start": "node server/index.js",
     "start:api": "node server/index.js",
-    "iniciar:api": "node server/index.js"
+    "iniciar:api": "node server/index.js",
+    "inspect:login": "node scripts/inspect-login-sp.js",
+    "inspect:leads": "node scripts/inspect-leads-sp.js"
   },
   "dependencies": {
     "better-sqlite3": "^12.9.0",

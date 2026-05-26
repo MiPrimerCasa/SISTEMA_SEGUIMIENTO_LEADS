@@ -1,5 +1,10 @@
 import sql from 'mssql';
-import { getSqlPoolEncuestas, isSqlServerConfigured } from './mssql.js';
+import {
+  getSqlPoolEncuestas,
+  isSqlServerConfigured,
+  mapOperadorVendedorToRol,
+  parseIdEntero,
+} from './mssql.js';
 import { getSeguimientoExterno, upsertSeguimientoExterno } from './sqlite.js';
 
 function pickField(row, ...candidates) {
@@ -68,6 +73,14 @@ export function parseIdVendedor(usuario) {
   return id;
 }
 
+/** Serializa una fila SQL para logs / scripts de inspección. */
+export function serializeEncuestaRow(row) {
+  if (!row) return null;
+  return Object.fromEntries(
+    Object.entries(row).map(([k, v]) => [k, v instanceof Date ? v.toISOString() : v]),
+  );
+}
+
 /** exec [dbo].[encuestasMuestraOperador] @idVendedor = idOperador */
 export async function fetchEncuestasMuestraRaw(usuario) {
   const pool = await getSqlPoolEncuestas();
@@ -79,6 +92,74 @@ export async function fetchEncuestasMuestraRaw(usuario) {
   request.input(paramName, sql.Int, idVendedor);
   const result = await request.execute(proc);
   return result.recordset ?? result.recordsets?.[0] ?? [];
+}
+
+/**
+ * Rol según encuestasMuestraOperador: idOperador === idVendedor → supervisor.
+ * La DB ya filtra qué filas devuelve con @idVendedor = idOperador.
+ */
+export function resolveRolFromEncuestasRows(rows, idOperador) {
+  if (!rows?.length) return null;
+  const idVendedor = pickField(rows[0], 'idVendedor', 'IdVendedor');
+  const idSupervisor = pickField(rows[0], 'idSupervisor', 'IdSupervisor');
+  const rol = mapOperadorVendedorToRol(idOperador, idVendedor);
+  if (!rol) return null;
+  return {
+    rol,
+    rolOrigen: 'encuestas',
+    idVendedor: idVendedor != null ? String(idVendedor) : undefined,
+    idSupervisor: idSupervisor != null ? String(idSupervisor) : undefined,
+  };
+}
+
+/** Tras login: consulta encuestas y define rol + ids de la primera fila. */
+export async function enrichOperadorRolDesdeEncuestas(operador) {
+  const idOperador = operador.idOperador ?? operador.id;
+  if (!parseIdEntero(idOperador)) return operador;
+
+  try {
+    const rows = await fetchEncuestasMuestraRaw({
+      id: String(idOperador),
+      nombre: operador.nombre,
+      rol: 'supervisor',
+    });
+    const resolved = resolveRolFromEncuestasRows(rows, idOperador);
+    if (!resolved) return operador;
+
+    return {
+      ...operador,
+      rol: resolved.rol,
+      rolOrigen: resolved.rolOrigen,
+      idVendedor: resolved.idVendedor ?? operador.idVendedor,
+      idSupervisor: resolved.idSupervisor ?? operador.idSupervisor,
+    };
+  } catch (error) {
+    console.warn(
+      'Rol desde encuestas no disponible, se usa categoría:',
+      error instanceof Error ? error.message : error,
+    );
+    return operador;
+  }
+}
+
+/** Columnas que podrían servir para comparar supervisor vs vendedor (ids o códigos). */
+export function analyzeEncuestasIdColumns(rows) {
+  if (!rows?.length) return [];
+  const keys = Object.keys(rows[0]);
+  const interesting = keys.filter((k) =>
+    /id|supervisor|vendedor|promotor|operador|usuario|codigo/i.test(k),
+  );
+  return interesting.map((col) => {
+    const valores = [
+      ...new Set(
+        rows
+          .map((r) => r[col])
+          .filter((v) => v != null && String(v).trim() !== '')
+          .map((v) => (v instanceof Date ? v.toISOString() : v)),
+      ),
+    ].slice(0, 8);
+    return { columna: col, ejemplos: valores, distintos: valores.length };
+  });
 }
 
 function buildObservacionesEncuesta(row) {

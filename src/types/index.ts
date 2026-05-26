@@ -68,6 +68,6 @@ export interface UsuarioSesion {
   idOperador?: string;
   idSupervisor?: string;
   idVendedor?: string;
-  /** Cómo se calculó el rol: ids (regla DBA) o categoria (respaldo) */
-  rolOrigen?: 'ids' | 'categoria';
+  /** Cómo se calculó el rol: encuestas (idOperador vs idVendedor) o categoria (respaldo) */
+  rolOrigen?: 'encuestas' | 'categoria';
 }
