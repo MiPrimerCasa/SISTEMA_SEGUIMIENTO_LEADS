@@ -3,8 +3,7 @@
 App React mobile-first conectada **solo a la base de producción** (SQL Server STRSYSTEM). No incluye usuarios ni leads de prueba.
 
 **Deploy:** monorepo recomendado con [encuesta-sorteo](https://github.com/MiPrimerCasa/encuesta-sorteo) → carpeta `leads/` — ver [docs/MONOREPO.md](docs/MONOREPO.md).  
-Alternativa repo aparte: [docs/DEPLOY_VPS.md](docs/DEPLOY_VPS.md).  
-**Pruebas rápidas en la nube:** [render.yaml](render.yaml) + [docs/DEPLOY_RENDER.md](docs/DEPLOY_RENDER.md).
+Alternativa repo aparte: [docs/DEPLOY_VPS.md](docs/DEPLOY_VPS.md).
 
 ## Fuentes de datos
 
