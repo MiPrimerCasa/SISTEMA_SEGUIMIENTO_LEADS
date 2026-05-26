@@ -100,10 +100,16 @@ app.get('/api/leads', async (req, res) => {
   try {
     getDb();
     const leads = await listLeadsFromEncuestas(usuario);
+    const conTelefono = leads.filter((l) => l.telefono).length;
     return res.json({
       leads,
       source: 'produccion',
       sp: process.env.SP_ENCUESTAS || 'encuestasMuestraOperador',
+      meta: {
+        telefonoDesde: 'encuesta.telefono (encuestasMuestraOperador)',
+        leadsConTelefono: conTelefono,
+        leadsTotal: leads.length,
+      },
     });
   } catch (error) {
     console.error('Error al listar leads:', error);
@@ -235,6 +241,7 @@ app.listen(PORT, () => {
     console.log(
       `  Leads → ${process.env.SP_ENCUESTAS || 'encuestasMuestraOperador'} @idVendedor @ ${process.env.ENCUESTAS_DB_NAME || process.env.DB_NAME}`,
     );
+    console.log('  WhatsApp → columna telefono de la encuesta (no usar Contacto en 2/3)');
     console.log('  Caché local: seguimiento de la app en data/app-cache.db');
   } else {
     console.error('FALTA .env: DB_HOST, DB_USER, DB_PASSWORD, DB_NAME — no hay modo demo.');

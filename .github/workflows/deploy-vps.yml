@@ -1,23 +1,17 @@
-# Repo STANDALONE (sin monorepo): deploy desde la raíz de seguimiento-leads.
-# En monorepo encuesta-sorteo usar: deploy/github-workflow/deploy-leads.yml
-# en .github/workflows/ de la raíz del monorepo.
-
-name: Deploy VPS (Seguimiento Leads — standalone)
+name: Deploy VPS (Seguimiento Leads)
 
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 
 concurrency:
-  group: deploy-seguimiento-leads-standalone
+  group: deploy-seguimiento-leads
   cancel-in-progress: true
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy via SSH (standalone /opt/seguimiento-leads)
+      - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.VPS_HOST }}
@@ -26,10 +20,21 @@ jobs:
           script_stop: true
           script: |
             set -euo pipefail
-            LEADS_DIR="${LEADS_DIR:-/opt/seguimiento-leads}"
-            MONOREPO_ROOT="$LEADS_DIR"
-            cd "$LEADS_DIR"
-            git fetch origin main
-            git reset --hard origin/main
-            chmod +x deploy/deploy-vps-docker.sh
-            MONOREPO_ROOT="$MONOREPO_ROOT" LEADS_DIR="$LEADS_DIR" bash deploy/deploy-vps-docker.sh
+            if [[ -f /opt/encuesta-landingqr/leads/deploy/deploy-vps-docker.sh ]]; then
+              echo "Modo: monorepo"
+              cd /opt/encuesta-landingqr
+              git fetch --all --prune
+              git pull --ff-only origin main || git pull --ff-only
+              chmod +x leads/deploy/deploy-vps-docker.sh
+              MONOREPO_ROOT=/opt/encuesta-landingqr bash leads/deploy/deploy-vps-docker.sh
+            elif [[ -f /opt/seguimiento-leads/deploy/deploy-vps-docker.sh ]]; then
+              echo "Modo: standalone"
+              cd /opt/seguimiento-leads
+              git fetch --all --prune
+              git pull --ff-only origin main || git pull --ff-only
+              chmod +x deploy/deploy-vps-docker.sh
+              MONOREPO_ROOT=/opt/seguimiento-leads LEADS_DIR=/opt/seguimiento-leads bash deploy/deploy-vps-docker.sh
+            else
+              echo "ERROR: no hay carpeta leads en el VPS"
+              exit 1
+            fi
