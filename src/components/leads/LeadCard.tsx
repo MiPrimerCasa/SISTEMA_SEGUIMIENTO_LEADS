@@ -86,6 +86,9 @@ export function LeadCard({
             {!esArchivo && !reagenda && tieneSeguimiento && (
               <StatusPill variant="in-progress" dot>Contactado</StatusPill>
             )}
+            {!esArchivo && !esSeguimiento && !tieneSeguimiento && !reagenda && (
+              <StatusPill variant="nuevo" dot>Nuevo</StatusPill>
+            )}
           </div>
         </div>
 
