@@ -1,5 +1,14 @@
 export type RolUsuario = 'promotor' | 'supervisor';
 export type VistaActiva = 'leads' | 'promotores' | 'calendario';
+
+export interface NuevoLeadData {
+  nombre: string;
+  telefono: string;
+  lista: ListaLead;
+  quiereEntrevista: boolean;
+  promotorId: string;
+  domicilio?: string;
+}
 export type ListaLead = 'entrevista' | 'contacto';
 export type CanalContacto = 'llamada' | 'mensaje';
 export type ResultadoEntrevista = 'sin_interes' | 'reagenda' | 'no_compro' | 'compro';

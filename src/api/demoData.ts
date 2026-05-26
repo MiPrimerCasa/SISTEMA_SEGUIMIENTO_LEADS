@@ -1,4 +1,4 @@
-import type { Barrio, Lead, Producto, Promotor, SeguimientoLead, UsuarioSesion } from '../types';
+import type { Barrio, Lead, NuevoLeadData, Producto, Promotor, SeguimientoLead, UsuarioSesion } from '../types';
 
 // ─── Usuario demo ────────────────────────────────────────────────────────────
 
@@ -380,4 +380,24 @@ export function updateDemoLead(leadId: string, seguimiento: SeguimientoLead): Le
   };
   demoLeads = demoLeads.map((l) => (l.id === leadId ? updated : l));
   return { ...updated };
+}
+
+export function createDemoLead(data: NuevoLeadData): Lead {
+  const now = new Date();
+  const promotorNombre = DEMO_PROMOTORES.find((p) => p.id === data.promotorId)?.nombre;
+  const newLead: Lead = {
+    id: `lead-${Date.now()}`,
+    nombre: data.nombre.trim(),
+    telefono: data.telefono.trim(),
+    promotorId: data.promotorId,
+    promotorNombre,
+    domicilio: data.domicilio?.trim() || undefined,
+    quiereEntrevista: data.quiereEntrevista,
+    lista: data.lista,
+    fechaObtencion: now.toISOString().slice(0, 10),
+    fechaAlta: now.toISOString(),
+    seguimiento: {},
+  };
+  demoLeads = [...demoLeads, newLead];
+  return { ...newLead };
 }

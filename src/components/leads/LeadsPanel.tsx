@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useLeadsFilter } from '../../hooks/useLeadsFilter';
-import type { Barrio, Lead, Producto, Promotor, RolUsuario, SeguimientoLead } from '../../types';
+import type { Barrio, Lead, NuevoLeadData, Producto, Promotor, RolUsuario, SeguimientoLead } from '../../types';
 import { LeadCard } from './LeadCard';
 import { LeadModalForm } from './LeadModalForm';
+import { NuevoLeadSheet } from './NuevoLeadSheet';
 
 type ListaKey = 'entrevistaPendiente' | 'paraContactar' | 'seguimiento' | 'compraron';
 type VarianteCard = 'activo' | 'seguimiento' | 'compro';
@@ -56,6 +57,7 @@ interface LeadsPanelProps {
   productos: Producto[];
   barrios: Barrio[];
   onActualizarLead: (leadId: string, seguimiento: SeguimientoLead) => void | Promise<void>;
+  onCrearLead: (data: NuevoLeadData) => void | Promise<void>;
 }
 
 export function LeadsPanel({
@@ -65,6 +67,7 @@ export function LeadsPanel({
   productos,
   barrios,
   onActualizarLead,
+  onCrearLead,
 }: LeadsPanelProps) {
   const { entrevistaPendiente, paraContactar, seguimiento, compraron } = useLeadsFilter(leads);
   const listas: Record<ListaKey, Lead[]> = {
@@ -77,6 +80,7 @@ export function LeadsPanel({
   const [tabActivo, setTabActivo] = useState('entrevista');
   const [leadSeleccionado, setLeadSeleccionado] = useState<Lead | null>(null);
   const [modalAbierto, setModalAbierto] = useState(false);
+  const [agendarAbierto, setAgendarAbierto] = useState(false);
 
   const abrirLead = (lead: Lead) => {
     setLeadSeleccionado(lead);
@@ -152,6 +156,19 @@ export function LeadsPanel({
         })}
       </nav>
 
+      {/* Botón Agendar */}
+      <button
+        type="button"
+        onClick={() => setAgendarAbierto(true)}
+        style={{ touchAction: 'manipulation' }}
+        className="mb-6 flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-zinc-100 text-[14px] font-semibold text-zinc-600 transition-all duration-[120ms] ease-out active:scale-[0.98] active:bg-zinc-200 hover:bg-zinc-200"
+      >
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+        </svg>
+        Agendar cliente
+      </button>
+
       {/* Título de la sección activa */}
       <div className="mb-4 flex items-baseline gap-2">
         <h2 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-zinc-500">
@@ -189,6 +206,14 @@ export function LeadsPanel({
         barrios={barrios}
         onClose={cerrarModal}
         onSave={async (leadId, seg) => { await onActualizarLead(leadId, seg); }}
+      />
+
+      <NuevoLeadSheet
+        open={agendarAbierto}
+        rolUsuario={rolUsuario}
+        promotores={promotores}
+        onClose={() => setAgendarAbierto(false)}
+        onSave={onCrearLead}
       />
     </div>
   );

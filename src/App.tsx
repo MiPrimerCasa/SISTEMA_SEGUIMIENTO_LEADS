@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
+  crearLead,
   fetchBarrios,
   fetchLeads,
   fetchProductos,
@@ -12,7 +13,7 @@ import { LeadsPanel } from './components/leads/LeadsPanel';
 import { PromotoresPanel } from './components/promotores/PromotoresPanel';
 import { CalendarioView } from './components/calendario/CalendarioView';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import type { Barrio, Lead, Producto, Promotor, SeguimientoLead, VistaActiva } from './types';
+import type { Barrio, Lead, NuevoLeadData, Producto, Promotor, SeguimientoLead, VistaActiva } from './types';
 
 function AppShell() {
   const { usuario, login, logout } = useAuth();
@@ -65,6 +66,11 @@ function AppShell() {
     [],
   );
 
+  const onCrearLead = useCallback(async (data: NuevoLeadData) => {
+    const newLead = await crearLead(data);
+    setLeads((prev) => [...prev, newLead]);
+  }, []);
+
   if (!usuario) {
     return <LoginPage onLogin={login} />;
   }
@@ -102,6 +108,7 @@ function AppShell() {
             productos={productos}
             barrios={barrios}
             onActualizarLead={onActualizarLead}
+            onCrearLead={onCrearLead}
           />
         )}
       </main>

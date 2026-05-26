@@ -1,6 +1,7 @@
 import type {
   Barrio,
   Lead,
+  NuevoLeadData,
   Producto,
   Promotor,
   RolUsuario,
@@ -12,6 +13,7 @@ import {
   DEMO_PRODUCTOS,
   DEMO_PROMOTORES,
   DEMO_USUARIO,
+  createDemoLead,
   getDemoLeads,
   updateDemoLead,
 } from './demoData';
@@ -102,6 +104,15 @@ export async function guardarSeguimiento(leadId: string, seguimiento: Seguimient
   const data = await apiFetch<{ lead: Lead; message: string }>(`/api/leads/${leadId}/seguimiento`, {
     method: 'PATCH',
     body: JSON.stringify(seguimiento),
+  });
+  return data.lead;
+}
+
+export async function crearLead(nuevoLead: NuevoLeadData) {
+  if (IS_DEMO) return createDemoLead(nuevoLead);
+  const data = await apiFetch<{ lead: Lead }>('/api/leads', {
+    method: 'POST',
+    body: JSON.stringify(nuevoLead),
   });
   return data.lead;
 }
