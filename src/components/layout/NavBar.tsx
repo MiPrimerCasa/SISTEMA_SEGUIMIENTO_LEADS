@@ -1,3 +1,4 @@
+import { LOGO_MPC_ALT, LOGO_MPC_URL } from '../../brand';
 import type { RolUsuario, UsuarioSesion } from '../../types';
 
 const TABS = [
@@ -27,9 +28,9 @@ export function NavBar({ vistaActiva, onCambiarVista, usuario, onLogout }: NavBa
         <div className="flex items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
             <img
-              src="/logo-mpc.png"
-              alt="Mi Primer Casa S.A."
-              className="h-12 w-12 shrink-0 rounded-full border-2 border-white object-cover shadow-sm sm:h-14 sm:w-14"
+              src={LOGO_MPC_URL}
+              alt={LOGO_MPC_ALT}
+              className="h-12 w-12 shrink-0 rounded-full border-2 border-white bg-white object-contain p-0.5 shadow-sm sm:h-14 sm:w-14"
             />
             <div className="min-w-0">
               <p className="truncate text-[10px] font-bold uppercase tracking-widest text-white/90 sm:text-xs">
@@ -66,7 +67,7 @@ export function NavBar({ vistaActiva, onCambiarVista, usuario, onLogout }: NavBa
             <span className="font-bold">{usuario.nombre}</span>
             <span className="text-white/70">
               {' '}
-              · {usuario.categoria ?? ROL_LABEL[usuario.rol]}
+              · {ROL_LABEL[usuario.rol]}
             </span>
           </p>
           <button

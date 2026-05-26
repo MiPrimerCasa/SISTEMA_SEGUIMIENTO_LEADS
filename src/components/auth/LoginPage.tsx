@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react';
+import { LOGO_MPC_ALT, LOGO_MPC_URL } from '../../brand';
 
 interface LoginPageProps {
   onLogin: (usuario: string, password: string) => Promise<void>;
@@ -30,7 +31,11 @@ export function LoginPage({ onLogin }: LoginPageProps) {
         className="w-full max-w-md space-y-4 rounded-3xl border-2 border-brand/20 bg-white p-6 shadow-lg"
       >
         <div className="text-center">
-          <img src="/logo-mpc.png" alt="" className="mx-auto h-16 w-16 rounded-full border-2 border-brand" />
+          <img
+            src={LOGO_MPC_URL}
+            alt={LOGO_MPC_ALT}
+            className="mx-auto h-16 w-16 rounded-full border-2 border-brand bg-white object-contain p-1"
+          />
           <h1 className="mt-3 text-xl font-bold uppercase text-brand">Mi Primer Casa S.A.</h1>
           <p className="text-sm text-neutral-600">Seguimiento de Leads</p>
         </div>
