@@ -1,0 +1,107 @@
+import { LOGO_MPC_ALT, LOGO_MPC_URL } from '../../brand';
+import { SegmentedControl } from '../ui/SegmentedControl';
+import type { RolUsuario, UsuarioSesion } from '../../types';
+
+const TABS = [
+  { value: 'leads' as const, label: 'Leads' },
+  { value: 'promotores' as const, label: 'Promotores' },
+];
+
+const ROL_LABEL: Record<RolUsuario, string> = {
+  promotor: 'Promotor',
+  supervisor: 'Supervisor',
+};
+
+interface NavBarProps {
+  vistaActiva: 'leads' | 'promotores';
+  onCambiarVista: (id: 'leads' | 'promotores') => void;
+  usuario: UsuarioSesion;
+  onLogout: () => void;
+}
+
+export function NavBar({ vistaActiva, onCambiarVista, usuario, onLogout }: NavBarProps) {
+  const tabs = usuario.rol === 'supervisor' ? TABS : TABS.filter((t) => t.value === 'leads');
+
+  return (
+    <header
+      className="sticky top-0 z-40 border-b border-zinc-200 bg-white/90 backdrop-blur-sm"
+      style={{ paddingTop: 'env(safe-area-inset-top)' }}
+    >
+      {/* Fila 1: marca + usuario */}
+      <div className="flex h-14 items-center justify-between gap-3 px-4 md:mx-auto md:h-16 md:max-w-5xl md:px-6">
+
+        {/* Brand */}
+        <div className="flex min-w-0 items-center gap-2.5">
+          <img
+            src={LOGO_MPC_URL}
+            alt={LOGO_MPC_ALT}
+            className="h-10 w-10 shrink-0 object-contain"
+          />
+          <div className="min-w-0">
+            <p className="hidden text-[10px] font-semibold uppercase tracking-[0.08em] text-zinc-400 sm:block">
+              Mi Primer Casa S.A.
+            </p>
+            <p className="truncate text-[13px] font-semibold text-zinc-900">
+              Mi Primer Casa
+            </p>
+          </div>
+        </div>
+
+        {/* Desktop: nav */}
+        <div className="hidden items-center gap-4 md:flex">
+          {tabs.length > 1 && (
+            <SegmentedControl
+              options={tabs}
+              value={vistaActiva}
+              onChange={onCambiarVista}
+            />
+          )}
+        </div>
+
+        <div className="flex items-center gap-2">
+          {/* Mobile: nombre + rol chip */}
+          <span className="rounded-md bg-zinc-100 px-2.5 py-1.5 text-[12px] font-semibold text-zinc-600 md:hidden">
+            {ROL_LABEL[usuario.rol]}
+          </span>
+
+          {/* Desktop: nombre + logout */}
+          <div className="hidden items-center gap-3 md:flex">
+            <span className="text-[13px] text-zinc-500">{usuario.nombre}</span>
+            <button
+              type="button"
+              onClick={onLogout}
+              style={{ touchAction: 'manipulation' }}
+              className="rounded-lg px-3 py-1.5 text-[12px] font-semibold text-zinc-500 transition-colors active:bg-brand-50 active:text-brand-700 hover:text-zinc-700"
+            >
+              Salir
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Fila 2 mobile: underline tabs */}
+      {tabs.length > 1 && (
+        <div className="flex border-t border-zinc-100 md:hidden">
+          {tabs.map((tab) => {
+            const active = vistaActiva === tab.value;
+            return (
+              <button
+                key={tab.value}
+                type="button"
+                onClick={() => onCambiarVista(tab.value)}
+                style={{ touchAction: 'manipulation' }}
+                className={`flex-1 py-2.5 text-[14px] font-semibold transition-colors ${
+                  active
+                    ? 'border-b-2 border-brand-600 text-brand-600'
+                    : 'border-b-2 border-transparent text-zinc-400 active:text-zinc-700'
+                }`}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </header>
+  );
+}
