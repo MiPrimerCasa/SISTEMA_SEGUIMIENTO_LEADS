@@ -18,32 +18,32 @@ const TABS: Array<{
 }> = [
   {
     id: 'entrevista',
-    tituloTab: 'Entrevista',
-    tituloLargo: 'Entrevista pendiente',
+    tituloTab: 'Nuevo lead',
+    tituloLargo: 'Nuevo lead — entrevista pendiente',
     key: 'entrevistaPendiente',
     variante: 'activo',
-    vacio: 'Sin leads pendientes',
+    vacio: 'Sin nuevos leads pendientes',
   },
   {
     id: 'contacto',
-    tituloTab: 'Contactar',
-    tituloLargo: 'Para contactar',
+    tituloTab: 'Contactado',
+    tituloLargo: 'Contactado — para seguir',
     key: 'paraContactar',
     variante: 'activo',
-    vacio: 'Sin leads para contactar',
+    vacio: 'Sin leads contactados',
   },
   {
     id: 'seguimiento',
-    tituloTab: 'Seguimiento',
-    tituloLargo: 'Seguimiento — entrevista reagendada',
+    tituloTab: 'En seguimiento',
+    tituloLargo: 'En seguimiento — entrevista reagendada',
     key: 'seguimiento',
     variante: 'seguimiento',
     vacio: 'Nadie con entrevista reagendada por ahora',
   },
   {
     id: 'compro',
-    tituloTab: 'Compraron',
-    tituloLargo: 'Compraron — cerrados',
+    tituloTab: 'Compró',
+    tituloLargo: 'Compró — cerrados',
     key: 'compraron',
     variante: 'compro',
     vacio: 'Aún no hay ventas registradas',
@@ -109,7 +109,7 @@ export function LeadsPanel({
         </svg>
         <p className="text-[13px] text-zinc-500">
           <span className="font-medium text-zinc-700">Reagendar</span> mueve el lead a{' '}
-          <span className="font-medium text-zinc-700">Seguimiento</span>.{' '}
+          <span className="font-medium text-zinc-700">En seguimiento</span>.{' '}
           <span className="font-medium text-zinc-700">Compró</span> lo archiva abajo.
         </p>
       </div>

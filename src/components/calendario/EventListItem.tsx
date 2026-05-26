@@ -38,7 +38,7 @@ export function EventListItem({ event, onOpen }: EventListItemProps) {
             <span>{event.promotor}</span>
             <span aria-hidden="true">·</span>
             <StatusPill variant="reagendado" dot>
-              Seguimiento
+              En seguimiento
             </StatusPill>
           </div>
         </div>

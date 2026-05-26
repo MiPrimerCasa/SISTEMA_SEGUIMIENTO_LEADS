@@ -81,10 +81,10 @@ export function LeadCard({
           <div className="shrink-0">
             {esArchivo && <StatusPill variant="compro" dot>Compró</StatusPill>}
             {esSeguimiento && !esArchivo && (
-              <StatusPill variant="reagendado" dot>Reagendado</StatusPill>
+              <StatusPill variant="reagendado" dot>En seguimiento</StatusPill>
             )}
             {!esArchivo && !reagenda && tieneSeguimiento && (
-              <StatusPill variant="in-progress" dot>Seguimiento</StatusPill>
+              <StatusPill variant="in-progress" dot>Contactado</StatusPill>
             )}
           </div>
         </div>

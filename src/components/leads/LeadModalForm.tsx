@@ -543,7 +543,7 @@ export function LeadModalForm({
             {form.reagendarEntrevista && (
               <p className="rounded-lg border border-brand-100 bg-brand-50 px-4 py-3 text-[13px] text-brand-700">
                 Al guardar, el lead pasa a{' '}
-                <span className="font-medium">Seguimiento</span> con la nueva fecha.
+                <span className="font-medium">En seguimiento</span> con la nueva fecha.
               </p>
             )}
 

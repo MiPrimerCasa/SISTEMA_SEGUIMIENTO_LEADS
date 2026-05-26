@@ -198,8 +198,8 @@ export function NuevoLeadSheet({
               <ToggleGroup
                 name="lista"
                 options={[
-                  { value: 'entrevista', label: 'Sí — Entrevista' },
-                  { value: 'contacto', label: 'No — Solo contactar' },
+                  { value: 'entrevista', label: 'Sí — Nuevo lead' },
+                  { value: 'contacto', label: 'No — Contactado' },
                 ]}
                 value={lista}
                 onChange={(v) => setLista(v as 'entrevista' | 'contacto')}
