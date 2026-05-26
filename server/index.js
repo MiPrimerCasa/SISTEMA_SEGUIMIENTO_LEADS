@@ -1,0 +1,240 @@
+import './load-env.js';
+import compression from 'compression';
+import cors from 'cors';
+import express from 'express';
+import { existsSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import {
+  buildPromotoresFromLeads,
+  listLeadsFromEncuestas,
+  updateLeadSeguimientoEncuesta,
+} from './db/encuestas.js';
+import { isSqlServerConfigured, verifyLoginSqlServer } from './db/mssql.js';
+import { getDb, listBarrios, listProductos, productoPermitidoParaRol } from './db/sqlite.js';
+import { getHealthInfo, respondIfNotConfigured } from './require-production.js';
+import { formatSqlError } from './sql-errors.js';
+import { loginSchema, seguimientoSchema } from './schemas/seguimiento.js';
+
+function usuarioDesdeRequest(req) {
+  const rol = req.headers['x-usuario-rol'];
+  const nombre = String(req.headers['x-usuario-nombre'] || '').trim();
+  const id = String(req.headers['x-usuario-id'] || '').trim();
+  if (rol !== 'promotor' && rol !== 'supervisor') return null;
+  if (!nombre || !id) return null;
+  return { id, nombre, rol };
+}
+
+const app = express();
+const PORT = Number(process.env.PORT || process.env.API_PORT || 3001);
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const distPath = path.resolve(__dirname, '../dist');
+
+app.use(compression());
+app.use(cors());
+app.use(express.json({ limit: '1mb' }));
+
+app.get('/api/health', async (_req, res) => {
+  try {
+    res.json(await getHealthInfo());
+  } catch (error) {
+    res.status(503).json({
+      ok: false,
+      detail: error instanceof Error ? error.message : 'Error de health',
+    });
+  }
+});
+
+app.post('/api/auth/login', async (req, res) => {
+  if (!respondIfNotConfigured(res)) return;
+
+  const parsed = loginSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({
+      message: 'Credenciales inválidas.',
+      details: parsed.error.flatten(),
+    });
+  }
+
+  const { usuario, password } = parsed.data;
+
+  try {
+    const user = await verifyLoginSqlServer(usuario, password);
+    if (!user) {
+      return res.status(401).json({ message: 'Usuario o contraseña incorrectos.' });
+    }
+    return res.json({
+      token: `sql-${user.id}`,
+      usuario: {
+        id: user.id,
+        nombre: user.nombre,
+        rol: user.rol,
+        categoria: user.categoria,
+        loginId: user.loginId,
+        idOperador: user.idOperador,
+        idSupervisor: user.idSupervisor,
+        idVendedor: user.idVendedor,
+        rolOrigen: user.rolOrigen,
+      },
+    });
+  } catch (error) {
+    console.error('Error login SQL Server:', error);
+    return res.status(503).json({
+      message: 'No se pudo validar el usuario en el servidor de producción.',
+      detail: error instanceof Error ? error.message : 'Error desconocido',
+    });
+  }
+});
+
+app.get('/api/leads', async (req, res) => {
+  if (!respondIfNotConfigured(res)) return;
+
+  const usuario = usuarioDesdeRequest(req);
+  if (!usuario) {
+    return res.status(401).json({ message: 'Sesión inválida. Volvé a iniciar sesión.' });
+  }
+
+  try {
+    getDb();
+    const leads = await listLeadsFromEncuestas(usuario);
+    return res.json({
+      leads,
+      source: 'produccion',
+      sp: process.env.SP_ENCUESTAS || 'encuestasMuestraOperador',
+    });
+  } catch (error) {
+    console.error('Error al listar leads:', error);
+    const err = formatSqlError(error);
+    return res.status(500).json(err);
+  }
+});
+
+app.get('/api/promotores', async (req, res) => {
+  if (!respondIfNotConfigured(res)) return;
+
+  const usuario = usuarioDesdeRequest(req);
+  if (!usuario) {
+    return res.status(401).json({ message: 'Sesión inválida. Volvé a iniciar sesión.' });
+  }
+  if (usuario.rol !== 'supervisor') {
+    return res.status(403).json({
+      message: 'La vista de promotores solo está disponible para supervisores.',
+    });
+  }
+
+  try {
+    const leads = await listLeadsFromEncuestas(usuario);
+    return res.json({ promotores: buildPromotoresFromLeads(leads), source: 'produccion' });
+  } catch (error) {
+    console.error('Error al listar promotores:', error);
+    const err = formatSqlError(error);
+    return res.status(500).json(err);
+  }
+});
+
+app.get('/api/barrios', (_req, res) => {
+  if (!respondIfNotConfigured(res)) return;
+  try {
+    getDb();
+    return res.json({ barrios: listBarrios() });
+  } catch (error) {
+    return res.status(500).json({
+      message: 'Error al listar barrios.',
+      detail: error instanceof Error ? error.message : 'Error desconocido',
+    });
+  }
+});
+
+app.get('/api/productos', (req, res) => {
+  if (!respondIfNotConfigured(res)) return;
+  try {
+    getDb();
+    const rol = String(req.query.rol || '');
+    let productos = listProductos();
+    if (rol === 'promotor' || rol === 'supervisor') {
+      productos = productos.filter((p) => p.rolesPermitidos.includes(rol));
+    }
+    return res.json({ productos });
+  } catch (error) {
+    return res.status(500).json({
+      message: 'Error al listar productos.',
+      detail: error instanceof Error ? error.message : 'Error desconocido',
+    });
+  }
+});
+
+app.patch('/api/leads/:id/seguimiento', async (req, res) => {
+  if (!respondIfNotConfigured(res)) return;
+
+  const parsed = seguimientoSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({
+      message: 'Datos de seguimiento inválidos.',
+      details: parsed.error.flatten(),
+    });
+  }
+
+  const rol = req.headers['x-usuario-rol'];
+  const idUsuario = req.headers['x-usuario-id'];
+  const data = parsed.data;
+
+  if (data.resultadoEntrevista === 'compro' && data.idProducto) {
+    if (!rol || !productoPermitidoParaRol(data.idProducto, rol)) {
+      return res.status(403).json({
+        message: 'Tu rol no puede registrar la venta de ese producto.',
+      });
+    }
+  }
+
+  const usuario = usuarioDesdeRequest(req);
+  if (!usuario) {
+    return res.status(401).json({ message: 'Sesión inválida. Volvé a iniciar sesión.' });
+  }
+
+  try {
+    const lead = await updateLeadSeguimientoEncuesta(
+      req.params.id,
+      data,
+      usuario,
+      idUsuario ?? null,
+    );
+    if (!lead) {
+      return res.status(404).json({ message: 'Lead no encontrado en tus encuestas asignadas.' });
+    }
+    return res.json({
+      message: 'Seguimiento actualizado.',
+      lead,
+    });
+  } catch (error) {
+    console.error('Error al guardar seguimiento:', error);
+    return res.status(500).json({
+      message: 'Error al guardar seguimiento.',
+      detail: error instanceof Error ? error.message : 'Error desconocido',
+    });
+  }
+});
+
+if (existsSync(distPath)) {
+  app.use(express.static(distPath));
+  app.get(/^(?!\/api).*/, (_req, res) => {
+    res.sendFile(path.join(distPath, 'index.html'));
+  });
+}
+
+app.listen(PORT, () => {
+  getDb();
+  console.log(`API Seguimiento Leads en http://localhost:${PORT}`);
+  if (isSqlServerConfigured()) {
+    console.log('Modo: PRODUCCIÓN (sin datos de muestra)');
+    console.log(
+      `  Login → ${process.env.SP_LOGIN || 'operadorAccesoCategoria'} @ ${process.env.DB_NAME}`,
+    );
+    console.log(
+      `  Leads → ${process.env.SP_ENCUESTAS || 'encuestasMuestraOperador'} @idVendedor @ ${process.env.ENCUESTAS_DB_NAME || process.env.DB_NAME}`,
+    );
+    console.log('  Caché local: seguimiento de la app en data/app-cache.db');
+  } else {
+    console.error('FALTA .env: DB_HOST, DB_USER, DB_PASSWORD, DB_NAME — no hay modo demo.');
+  }
+});
