@@ -1,11 +1,14 @@
 import { LOGO_MPC_ALT, LOGO_MPC_URL } from '../../brand';
 import { SegmentedControl } from '../ui/SegmentedControl';
-import type { RolUsuario, UsuarioSesion } from '../../types';
+import type { RolUsuario, UsuarioSesion, VistaActiva } from '../../types';
 
-const TABS = [
+const TABS_SUPERVISOR = [
   { value: 'leads' as const, label: 'Leads' },
   { value: 'promotores' as const, label: 'Promotores' },
+  { value: 'calendario' as const, label: 'Calendario' },
 ];
+
+const TABS_PROMOTOR = [{ value: 'leads' as const, label: 'Leads' }];
 
 const ROL_LABEL: Record<RolUsuario, string> = {
   promotor: 'Promotor',
@@ -13,14 +16,15 @@ const ROL_LABEL: Record<RolUsuario, string> = {
 };
 
 interface NavBarProps {
-  vistaActiva: 'leads' | 'promotores';
-  onCambiarVista: (id: 'leads' | 'promotores') => void;
+  vistaActiva: VistaActiva;
+  onCambiarVista: (id: VistaActiva) => void;
   usuario: UsuarioSesion;
   onLogout: () => void;
 }
 
 export function NavBar({ vistaActiva, onCambiarVista, usuario, onLogout }: NavBarProps) {
-  const tabs = usuario.rol === 'supervisor' ? TABS : TABS.filter((t) => t.value === 'leads');
+  const tabs: Array<{ value: VistaActiva; label: string }> =
+    usuario.rol === 'supervisor' ? TABS_SUPERVISOR : TABS_PROMOTOR;
 
   return (
     <header

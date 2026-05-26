@@ -10,12 +10,13 @@ import { LoginPage } from './components/auth/LoginPage';
 import { NavBar } from './components/layout/NavBar';
 import { LeadsPanel } from './components/leads/LeadsPanel';
 import { PromotoresPanel } from './components/promotores/PromotoresPanel';
+import { CalendarioView } from './components/calendario/CalendarioView';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import type { Barrio, Lead, Producto, Promotor, SeguimientoLead } from './types';
+import type { Barrio, Lead, Producto, Promotor, SeguimientoLead, VistaActiva } from './types';
 
 function AppShell() {
   const { usuario, login, logout } = useAuth();
-  const [vistaActiva, setVistaActiva] = useState<'leads' | 'promotores'>('leads');
+  const [vistaActiva, setVistaActiva] = useState<VistaActiva>('leads');
   const [leads, setLeads] = useState<Lead[]>([]);
   const [promotores, setPromotores] = useState<Promotor[]>([]);
   const [productos, setProductos] = useState<Producto[]>([]);
@@ -51,7 +52,7 @@ function AppShell() {
   }, [cargarDatos]);
 
   useEffect(() => {
-    if (usuario?.rol === 'promotor' && vistaActiva === 'promotores') {
+    if (usuario?.rol === 'promotor' && (vistaActiva === 'promotores' || vistaActiva === 'calendario')) {
       setVistaActiva('leads');
     }
   }, [usuario?.rol, vistaActiva]);
@@ -84,6 +85,13 @@ function AppShell() {
         )}
         {cargando && leads.length === 0 ? (
           <p className="px-4 py-12 text-center text-neutral-600">Cargando datos…</p>
+        ) : vistaActiva === 'calendario' && usuario.rol === 'supervisor' ? (
+          <CalendarioView
+            leads={leads}
+            promotores={promotores}
+            onActualizarLead={onActualizarLead}
+            onVolver={() => setVistaActiva('leads')}
+          />
         ) : vistaActiva === 'promotores' && usuario.rol === 'supervisor' ? (
           <PromotoresPanel leads={leads} promotores={promotores} />
         ) : (
