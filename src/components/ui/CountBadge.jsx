@@ -1,14 +1,7 @@
-/** Badge circular blanco con número rojo (estilo Mi Primer Casa) */
-export function CountBadge({ count, className = '', size = 'md' }) {
-  const sizes = {
-    sm: 'h-7 min-w-7 text-base',
-    md: 'h-8 min-w-8 text-lg',
-    lg: 'h-9 min-w-9 text-xl',
-  };
-
+export function CountBadge({ count }) {
   return (
     <span
-      className={`inline-flex shrink-0 items-center justify-center rounded-full bg-white font-bold leading-none text-brand shadow-md ring-2 ring-brand/15 ${sizes[size]} ${className}`}
+      className="inline-flex items-center justify-center rounded-md bg-zinc-100 px-1.5 py-0.5 text-[11px] font-semibold tabular-nums text-zinc-500"
       aria-label={`${count}`}
     >
       {count}

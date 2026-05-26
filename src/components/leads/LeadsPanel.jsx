@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useLeadsFilter } from '../../hooks/useLeadsFilter';
-import { CountBadge } from '../ui/CountBadge';
 import { LeadCard } from './LeadCard';
 import { LeadModalForm } from './LeadModalForm';
 
@@ -33,19 +32,12 @@ const SECCION_COMPRO = {
   key: 'compraron',
 };
 
-function estiloTabActivo(tabId, activo) {
-  if (!activo) return 'bg-white text-neutral-800 ring-1 ring-neutral-200';
-  if (tabId === 'compro') return 'bg-black text-white ring-2 ring-black';
-  if (tabId === 'seguimiento') return 'bg-brand-dark text-white ring-2 ring-brand-dark';
-  return 'bg-brand text-white ring-2 ring-brand';
-}
-
 const TABS_MOBILE = [...COLUMNAS_ACTIVAS, SECCION_SEGUIMIENTO, SECCION_COMPRO];
 
 function ListaLeads({ items, onAbrir, variante, vacio }) {
   if (items.length === 0) {
     return (
-      <p className="rounded-2xl border-2 border-dashed border-brand/25 py-8 text-center text-sm text-neutral-400">
+      <p className="rounded-lg border border-dashed border-zinc-200 py-8 text-center text-[13px] text-zinc-400">
         {vacio}
       </p>
     );
@@ -59,41 +51,48 @@ function ListaLeads({ items, onAbrir, variante, vacio }) {
   );
 }
 
+function SectionEyebrow({ titulo, contador }) {
+  return (
+    <div className="mb-4 flex items-baseline gap-2.5">
+      <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-zinc-900">
+        {titulo}
+      </span>
+      <span className="text-[13px] tabular-nums text-zinc-400">{contador}</span>
+    </div>
+  );
+}
+
 function SeccionColapsable({
   tabActivo,
   tabId,
   abierto,
   onToggle,
   titulo,
-  subtituloMobile,
   contador,
-  headerClass,
   children,
 }) {
   const visibleMobile = tabActivo === tabId;
 
   return (
-    <section
-      className={`mt-6 overflow-hidden rounded-2xl border-2 border-brand/15 bg-white shadow-sm ${
-        visibleMobile ? '' : 'hidden lg:block'
-      }`}
-    >
+    <section className={`mt-10 ${visibleMobile ? '' : 'hidden lg:block'}`}>
       <button
         type="button"
         onClick={onToggle}
-        className={`${visibleMobile ? 'hidden' : 'flex'} w-full min-h-12 items-center justify-between gap-2 px-4 py-3 text-left touch-manipulation lg:flex lg:cursor-default lg:pointer-events-none ${headerClass}`}
+        className={`${
+          visibleMobile ? 'hidden' : 'flex'
+        } w-full items-center justify-between gap-2 pb-4 text-left touch-manipulation lg:flex lg:cursor-default lg:pointer-events-none`}
         aria-expanded={abierto}
       >
-        <div>
-          <h2 className="text-base font-bold uppercase text-white">{titulo}</h2>
-          <p className="text-xs text-white/80 lg:hidden">{subtituloMobile}</p>
+        <div className="flex items-baseline gap-2.5">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-zinc-500">
+            {titulo}
+          </span>
+          <span className="text-[13px] tabular-nums text-zinc-400">{contador}</span>
         </div>
-        <CountBadge count={contador} size="md" />
-        <span className="text-white lg:hidden" aria-hidden>
-          {abierto ? '▲' : '▼'}
-        </span>
+        <span className="text-[11px] text-zinc-400 lg:hidden">{abierto ? '▲' : '▼'}</span>
       </button>
-      {(abierto || visibleMobile) && <div className="space-y-3 bg-neutral-50 p-4">{children}</div>}
+
+      {(abierto || visibleMobile) && <div className="space-y-3">{children}</div>}
     </section>
   );
 }
@@ -123,14 +122,37 @@ export function LeadsPanel({ leads, rolUsuario, onActualizarLead }) {
   };
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-4 pb-8">
-      <p className="mb-4 text-sm font-medium text-neutral-600">
-        <strong>Reagendar</strong> mueve el lead a <strong>Seguimiento</strong>.{' '}
-        <strong>Compró</strong> lo archiva abajo. El panel superior queda solo para trabajo del día.
-      </p>
+    <div className="mx-auto max-w-5xl px-4 py-6 pb-12 sm:px-6">
 
+      {/* Info banner */}
+      <div className="mb-6 flex gap-3 rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-3">
+        <svg
+          width="15"
+          height="15"
+          viewBox="0 0 15 15"
+          fill="none"
+          className="mt-0.5 shrink-0 text-zinc-400"
+          aria-hidden="true"
+        >
+          <circle cx="7.5" cy="7.5" r="6.5" stroke="currentColor" strokeWidth="1.3" />
+          <path
+            d="M7.5 6.5v4M7.5 4.5v.5"
+            stroke="currentColor"
+            strokeWidth="1.3"
+            strokeLinecap="round"
+          />
+        </svg>
+        <p className="text-[13px] text-zinc-500">
+          <span className="font-medium text-zinc-700">Reagendar</span> mueve el lead a{' '}
+          <span className="font-medium text-zinc-700">Seguimiento</span>.{' '}
+          <span className="font-medium text-zinc-700">Compró</span> lo archiva abajo. El panel
+          superior queda solo para el trabajo del día.
+        </p>
+      </div>
+
+      {/* Navegación mobile */}
       <nav
-        className="mb-4 grid grid-cols-2 gap-2 rounded-2xl border-2 border-brand/15 bg-neutral-50 p-2 lg:hidden"
+        className="-mx-4 mb-6 flex gap-1 overflow-x-auto px-4 pb-1 sm:-mx-6 sm:px-6 lg:hidden"
         aria-label="Secciones de leads"
       >
         {TABS_MOBILE.map((tab) => {
@@ -141,33 +163,28 @@ export function LeadsPanel({ leads, rolUsuario, onActualizarLead }) {
               key={tab.id}
               type="button"
               onClick={() => setTabActivo(tab.id)}
-              className={`flex min-h-[3.25rem] w-full items-center justify-between gap-2 rounded-xl px-3 py-2.5 text-left text-sm font-bold uppercase shadow-sm transition touch-manipulation ${estiloTabActivo(tab.id, activo)}`}
+              className={`flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-2 text-[13px] font-medium transition-colors touch-manipulation ${
+                activo
+                  ? 'bg-white text-zinc-900 shadow-sm ring-1 ring-zinc-200'
+                  : 'text-zinc-500 hover:bg-zinc-100 hover:text-zinc-700'
+              }`}
             >
-              <span className="leading-tight">{tab.tituloTab}</span>
-              <CountBadge
-                count={count}
-                size="sm"
-                className={activo ? 'ring-2 ring-white' : 'ring-2 ring-brand/15'}
-              />
+              {tab.tituloTab}
+              <span className="tabular-nums text-[11px] text-zinc-400">{count}</span>
             </button>
           );
         })}
       </nav>
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      {/* Columnas activas desktop */}
+      <div className="grid gap-12 lg:grid-cols-2">
         {COLUMNAS_ACTIVAS.map((col) => {
           const items = listas[col.key];
           const esMobileOculta = tabActivo !== col.id;
 
           return (
-            <div
-              key={col.id}
-              className={`space-y-3 ${esMobileOculta ? 'hidden lg:block' : ''}`}
-            >
-              <h2 className="mb-1 hidden items-center gap-3 border-l-4 border-brand pl-3 text-base font-bold uppercase text-neutral-900 lg:flex">
-                {col.tituloLargo}
-                <CountBadge count={items.length} size="lg" />
-              </h2>
+            <div key={col.id} className={esMobileOculta ? 'hidden lg:block' : ''}>
+              <SectionEyebrow titulo={col.tituloLargo} contador={items.length} />
               <ListaLeads
                 items={items}
                 onAbrir={abrirLead}
@@ -179,15 +196,14 @@ export function LeadsPanel({ leads, rolUsuario, onActualizarLead }) {
         })}
       </div>
 
+      {/* Sección seguimiento */}
       <SeccionColapsable
         tabActivo={tabActivo}
         tabId="seguimiento"
         abierto={seguimientoAbierto}
         onToggle={() => setSeguimientoAbierto((v) => !v)}
         titulo={SECCION_SEGUIMIENTO.tituloLargo}
-        subtituloMobile={`Tocá para ${seguimientoAbierto ? 'ocultar' : 'ver'}`}
         contador={seguimiento.length}
-        headerClass="bg-brand-dark"
       >
         <ListaLeads
           items={seguimiento}
@@ -197,15 +213,14 @@ export function LeadsPanel({ leads, rolUsuario, onActualizarLead }) {
         />
       </SeccionColapsable>
 
+      {/* Sección compraron */}
       <SeccionColapsable
         tabActivo={tabActivo}
         tabId="compro"
         abierto={comproAbierto}
         onToggle={() => setComproAbierto((v) => !v)}
         titulo={SECCION_COMPRO.tituloLargo}
-        subtituloMobile={`Tocá para ${comproAbierto ? 'ocultar' : 'ver'}`}
         contador={compraron.length}
-        headerClass="bg-black"
       >
         <ListaLeads
           items={compraron}

@@ -23,7 +23,7 @@ export default function App() {
   }, []);
 
   return (
-    <div className="min-h-svh bg-neutral-100">
+    <div vaul-drawer-wrapper="" className="min-h-svh bg-zinc-50">
       <NavBar
         vistaActiva={vistaActiva}
         onCambiarVista={setVistaActiva}
