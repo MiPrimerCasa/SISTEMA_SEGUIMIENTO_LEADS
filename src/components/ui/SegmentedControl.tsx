@@ -1,4 +1,21 @@
-export function SegmentedControl({ options, value, onChange, size = 'md' }) {
+interface Option<T> {
+  value: T;
+  label: string;
+}
+
+interface SegmentedControlProps<T extends string> {
+  options: Option<T>[];
+  value: T;
+  onChange: (value: T) => void;
+  size?: 'md' | 'sm';
+}
+
+export function SegmentedControl<T extends string>({
+  options,
+  value,
+  onChange,
+  size = 'md',
+}: SegmentedControlProps<T>) {
   const sm = size === 'sm';
 
   return (

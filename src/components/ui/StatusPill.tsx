@@ -1,4 +1,8 @@
-const VARIANTS = {
+import type { ReactNode } from 'react';
+
+type Variant = 'in-progress' | 'reagendado' | 'pending' | 'success' | 'compro' | 'sin-interes';
+
+const VARIANTS: Record<Variant, string> = {
   'in-progress': 'bg-brand-50 text-brand-700 border border-brand-100',
   'reagendado':  'bg-brand-50 text-brand-700 border border-brand-100',
   'pending':     'bg-zinc-100 text-zinc-600 border border-zinc-200',
@@ -7,7 +11,7 @@ const VARIANTS = {
   'sin-interes': 'bg-zinc-100 text-zinc-400 border border-zinc-200',
 };
 
-const DOT_COLORS = {
+const DOT_COLORS: Record<Variant, string> = {
   'in-progress': 'bg-brand-600',
   'reagendado':  'bg-brand-600',
   'pending':     'bg-zinc-400',
@@ -16,7 +20,13 @@ const DOT_COLORS = {
   'sin-interes': 'bg-zinc-400',
 };
 
-export function StatusPill({ children, variant = 'pending', dot = false }) {
+interface StatusPillProps {
+  children: ReactNode;
+  variant?: Variant;
+  dot?: boolean;
+}
+
+export function StatusPill({ children, variant = 'pending', dot = false }: StatusPillProps) {
   const variantClass = VARIANTS[variant] ?? VARIANTS.pending;
   const dotColor = DOT_COLORS[variant] ?? 'bg-zinc-400';
 
