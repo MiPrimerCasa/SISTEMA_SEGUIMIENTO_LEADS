@@ -12,6 +12,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        # Monorepo en /leads; subdominio dedicado: LEADS_VITE_BASE=/
+        VITE_BASE: ${LEADS_VITE_BASE:-/leads/}
     image: seguimiento-leads:latest
     container_name: seguimiento-leads
     restart: unless-stopped

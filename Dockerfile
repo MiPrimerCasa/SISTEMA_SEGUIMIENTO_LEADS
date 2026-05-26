@@ -6,6 +6,9 @@ RUN npm ci
 COPY tsconfig.json vite.config.ts index.html ./
 COPY public ./public
 COPY src ./src
+# Monorepo: https://dominio.com/leads — subdominio standalone: VITE_BASE=/
+ARG VITE_BASE=/leads/
+ENV VITE_BASE=${VITE_BASE}
 RUN npm run build
 
 # --- Runtime (API + static) ---
