@@ -96,12 +96,15 @@ export function LeadsHistorial({ leads, promotores }: LeadsHistorialProps) {
         <div className="space-y-3">
           {/* Filtro por promotor — scroll horizontal en mobile */}
           {promotoresConLeads.length > 1 && (
-            <div className="flex gap-2 overflow-x-auto pb-0.5" style={{ scrollbarWidth: 'none' }}>
+            <div
+              className="flex gap-2 overflow-x-auto"
+              style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' as never, paddingBottom: 2 }}
+            >
               <button
                 type="button"
                 onClick={() => setFiltroPromotor(ALL)}
                 style={{ touchAction: 'manipulation' }}
-                className={`h-8 shrink-0 rounded-full border px-3 text-[12px] font-semibold transition-all duration-[120ms] active:scale-[0.97] ${
+                className={`h-8 shrink-0 whitespace-nowrap rounded-full border px-3 text-[12px] font-semibold transition-all duration-[120ms] active:scale-[0.97] ${
                   filtroPromotor === ALL
                     ? 'border-brand-700 bg-brand-600 text-white'
                     : 'border-zinc-200 bg-white text-zinc-600 active:bg-brand-50 active:border-brand-400 active:text-brand-700'
@@ -118,7 +121,7 @@ export function LeadsHistorial({ leads, promotores }: LeadsHistorialProps) {
                     type="button"
                     onClick={() => setFiltroPromotor(p.id)}
                     style={{ touchAction: 'manipulation' }}
-                    className={`h-8 shrink-0 rounded-full border px-3 text-[12px] font-semibold transition-all duration-[120ms] active:scale-[0.97] ${
+                    className={`h-8 shrink-0 whitespace-nowrap rounded-full border px-3 text-[12px] font-semibold transition-all duration-[120ms] active:scale-[0.97] ${
                       sel
                         ? 'border-brand-700 bg-brand-600 text-white'
                         : 'border-zinc-200 bg-white text-zinc-600 active:bg-brand-50 active:border-brand-400 active:text-brand-700'
