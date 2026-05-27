@@ -34,11 +34,14 @@ if [[ ! -f "$TRAEFIK_FRAGMENT" ]]; then
   exit 1
 fi
 
-# Actualizar monorepo (un solo git pull en la raíz)
-if [[ -d "${MONOREPO_ROOT}/.git" ]]; then
+# Actualizar monorepo (omitir si CI ya hizo fetch + reset --hard)
+if [[ -z "${SKIP_MONOREPO_GIT_PULL:-}" ]] && [[ -d "${MONOREPO_ROOT}/.git" ]]; then
   cd "$MONOREPO_ROOT"
-  git fetch --all --prune
-  git pull --ff-only origin main || git pull --ff-only
+  git checkout -f main 2>/dev/null || git checkout -fB main origin/main
+  git reset --hard HEAD
+  git clean -fd -e .env -e 'leads/.env' 2>/dev/null || true
+  git fetch origin main
+  git reset --hard origin/main
 fi
 
 set -a

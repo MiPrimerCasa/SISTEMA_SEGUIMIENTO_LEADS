@@ -58,10 +58,12 @@ jobs:
         env:
           SRC_SHA: ${{ github.sha }}
           SRC_MSG: ${{ github.event.head_commit.message }}
+          MONOREPO_PUSH_TOKEN: ${{ secrets.MONOREPO_PUSH_TOKEN }}
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git remote set-url origin "https://x-access-token:${MONOREPO_PUSH_TOKEN}@github.com/MiPrimerCasa/encuesta-sorteo.git"
 
           git add -A leads/
           if git diff --staged --quiet; then
@@ -74,13 +76,7 @@ jobs:
           git commit -m "chore(leads): sync desde SISTEMA_SEGUIMIENTO_LEADS@${SHORT}" \
             -m "${SRC_MSG:-sync manual}"
 
-          # pull --rebase falla con exit 128 si quedan cambios sin stage (p. ej. ignorados)
-          if ! git diff --quiet; then
-            echo "::warning::Cambios sin commitear; se descartan para poder hacer rebase"
-            git status --short
-            git restore .
-          fi
-
+          git reset --hard HEAD
           git fetch origin main
           git rebase origin/main
           git push origin main
@@ -96,12 +92,25 @@ jobs:
           script: |
             set -euo pipefail
             MONOREPO_ROOT="${MONOREPO_ROOT:-/opt/encuesta-landingqr}"
+            if [[ ! -d "$MONOREPO_ROOT/.git" ]]; then
+              echo "ERROR: $MONOREPO_ROOT no es un repo git"
+              exit 1
+            fi
             cd "$MONOREPO_ROOT"
+            git config --global --add safe.directory "$MONOREPO_ROOT" 2>/dev/null || true
+            git checkout -f main 2>/dev/null || git checkout -fB main origin/main
+            git reset --hard HEAD
+            git clean -fd -e .env -e 'leads/.env' 2>/dev/null || true
             git fetch origin main
             git reset --hard origin/main
-            chmod +x deploy/ensure-leads-env.sh leads/deploy/deploy-vps-docker.sh 2>/dev/null || true
-            MONOREPO_ROOT="$MONOREPO_ROOT" bash deploy/ensure-leads-env.sh || true
-            MONOREPO_ROOT="$MONOREPO_ROOT" bash leads/deploy/deploy-vps-docker.sh
+            DEPLOY_SCRIPT="leads/deploy/deploy-vps-docker.sh"
+            if [[ ! -f "$DEPLOY_SCRIPT" ]]; then
+              DEPLOY_SCRIPT="deploy/deploy-vps-docker.sh"
+            fi
+            chmod +x deploy/ensure-leads-env.sh "$DEPLOY_SCRIPT" 2>/dev/null || true
+            export MONOREPO_ROOT SKIP_MONOREPO_GIT_PULL=1
+            bash deploy/ensure-leads-env.sh 2>/dev/null || true
+            bash "$DEPLOY_SCRIPT"
 
       - name: Resumen
         if: always()
