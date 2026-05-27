@@ -63,7 +63,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          git add leads/
+          git add -A leads/
           if git diff --staged --quiet; then
             echo "Sin cambios en leads/ respecto al monorepo."
             echo "changed=false" >> "$GITHUB_OUTPUT"
@@ -74,7 +74,15 @@ jobs:
           git commit -m "chore(leads): sync desde SISTEMA_SEGUIMIENTO_LEADS@${SHORT}" \
             -m "${SRC_MSG:-sync manual}"
 
-          git pull origin main --rebase
+          # pull --rebase falla con exit 128 si quedan cambios sin stage (p. ej. ignorados)
+          if ! git diff --quiet; then
+            echo "::warning::Cambios sin commitear; se descartan para poder hacer rebase"
+            git status --short
+            git restore .
+          fi
+
+          git fetch origin main
+          git rebase origin/main
           git push origin main
           echo "changed=true" >> "$GITHUB_OUTPUT"
 
