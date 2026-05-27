@@ -112,16 +112,11 @@ jobs:
             cd "$MONOREPO_ROOT"
             # Restaurar archivos de despliegue que el tar NO trae (porque se excluyen en sync-to-monorepo.sh).
             ENV_BACKUP=""
-            DEPLOY_SCRIPT_BACKUP=""
             TRAEFIK_BACKUP=""
 
             if [[ -f leads/.env ]]; then
               ENV_BACKUP="$(mktemp)"
               cp -a leads/.env "$ENV_BACKUP"
-            fi
-            if [[ -f leads/deploy/deploy-vps-docker.sh ]]; then
-              DEPLOY_SCRIPT_BACKUP="$(mktemp)"
-              cp -a leads/deploy/deploy-vps-docker.sh "$DEPLOY_SCRIPT_BACKUP"
             fi
             if [[ -f leads/deploy/docker-compose.traefik-root.yml ]]; then
               TRAEFIK_BACKUP="$(mktemp)"
@@ -136,11 +131,6 @@ jobs:
               mkdir -p leads
               cp -a "$ENV_BACKUP" leads/.env
               rm -f "$ENV_BACKUP"
-            fi
-            if [[ -n "$DEPLOY_SCRIPT_BACKUP" && -f "$DEPLOY_SCRIPT_BACKUP" ]]; then
-              mkdir -p leads/deploy
-              cp -a "$DEPLOY_SCRIPT_BACKUP" leads/deploy/deploy-vps-docker.sh
-              rm -f "$DEPLOY_SCRIPT_BACKUP"
             fi
             if [[ -n "$TRAEFIK_BACKUP" && -f "$TRAEFIK_BACKUP" ]]; then
               mkdir -p leads/deploy
