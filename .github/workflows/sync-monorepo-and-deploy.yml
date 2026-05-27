@@ -74,16 +74,19 @@ jobs:
           git commit -m "chore(leads): sync desde SISTEMA_SEGUIMIENTO_LEADS@${SHORT}" \
             -m "${SRC_MSG:-sync manual}"
 
-          if ! git diff --quiet; then
-            echo "::warning::Cambios sin commitear; se descartan para poder hacer rebase"
-            git status --short
-            git restore .
-          fi
-
-          git fetch origin main
-          git rebase origin/main
-          # --no-thin evita packfiles delgados que a veces causan "fatal error in commit_refs" en GitHub
-          git push --no-thin origin main
+          # Reintentos por si GitHub falla transientemente en commit_refs
+          for attempt in 1 2 3 4 5; do
+            if git push origin main 2>&1; then
+              echo "Push OK en intento ${attempt}"
+              break
+            fi
+            if [[ $attempt -eq 5 ]]; then
+              echo "Error: push fallido tras 5 intentos"
+              exit 1
+            fi
+            echo "Intento ${attempt} fallido — reintentando en $((attempt * 20))s..."
+            sleep $((attempt * 20))
+          done
           echo "changed=true" >> "$GITHUB_OUTPUT"
           # El push a encuesta-sorteo/main dispara deploy-leads.yml en ese repo (igual que la encuesta).
           # No se necesita SCP ni SSH desde acá.
