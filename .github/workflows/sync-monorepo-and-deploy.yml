@@ -82,7 +82,8 @@ jobs:
 
           git fetch origin main
           git rebase origin/main
-          git push origin main
+          # --no-thin evita packfiles delgados que a veces causan "fatal error in commit_refs" en GitHub
+          git push --no-thin origin main
           echo "changed=true" >> "$GITHUB_OUTPUT"
           # El push a encuesta-sorteo/main dispara deploy-leads.yml en ese repo (igual que la encuesta).
           # No se necesita SCP ni SSH desde acá.
