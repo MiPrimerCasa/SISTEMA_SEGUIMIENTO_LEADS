@@ -58,7 +58,6 @@ jobs:
         env:
           SRC_SHA: ${{ github.sha }}
           SRC_MSG: ${{ github.event.head_commit.message }}
-          MONOREPO_PUSH_TOKEN: ${{ secrets.MONOREPO_PUSH_TOKEN }}
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
@@ -75,14 +74,15 @@ jobs:
           git commit -m "chore(leads): sync desde SISTEMA_SEGUIMIENTO_LEADS@${SHORT}" \
             -m "${SRC_MSG:-sync manual}"
 
-          git reset --hard HEAD
-          git fetch origin main
-          if ! git rebase origin/main; then
-            echo "::warning::Rebase falló; intentando merge"
-            git rebase --abort 2>/dev/null || true
-            git merge origin/main --no-edit
+          if ! git diff --quiet; then
+            echo "::warning::Cambios sin commitear; se descartan para poder hacer rebase"
+            git status --short
+            git restore .
           fi
-          git push "https://x-access-token:${MONOREPO_PUSH_TOKEN}@github.com/MiPrimerCasa/encuesta-sorteo.git" HEAD:main
+
+          git fetch origin main
+          git rebase origin/main
+          git push origin main
           echo "changed=true" >> "$GITHUB_OUTPUT"
 
       - name: Deploy leads en VPS
