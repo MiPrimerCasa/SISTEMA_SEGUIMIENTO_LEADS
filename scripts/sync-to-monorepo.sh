@@ -35,19 +35,28 @@ echo "Origen:  ${SOURCE_ROOT}"
 echo "Destino: ${DEST}"
 
 sync_dir src
-sync_dir server
+# server/index.js usa BASE_PATH /leads — no pisar desde standalone
+if [[ -d "${SOURCE_ROOT}/server" ]]; then
+  mkdir -p "${DEST}/server"
+  rsync "${RSYNC_EX[@]}" \
+    --exclude 'index.js' \
+    "${SOURCE_ROOT}/server/" "${DEST}/server/"
+  echo "  synced server/ (sin index.js monorepo)"
+fi
 sync_dir public
 sync_dir scripts
 sync_dir sql
 sync_dir docs
 
-# deploy/: no borrar plantillas solo del monorepo (github-workflow)
+# deploy/: conservar Traefik monorepo (/leads en dominio encuesta)
 if [[ -d "${SOURCE_ROOT}/deploy" ]]; then
   mkdir -p "${DEST}/deploy"
   rsync "${RSYNC_EX[@]}" \
     --exclude 'github-workflow' \
+    --exclude 'docker-compose.traefik-root.yml' \
+    --exclude 'deploy-vps-docker.sh' \
     "${SOURCE_ROOT}/deploy/" "${DEST}/deploy/"
-  echo "  synced deploy/ (sin github-workflow/)"
+  echo "  synced deploy/ (sin github-workflow ni traefik/deploy monorepo)"
 fi
 
 for f in package.json package-lock.json tsconfig.json vite.config.ts index.html \
