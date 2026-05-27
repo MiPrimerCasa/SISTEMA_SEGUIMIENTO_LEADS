@@ -1,11 +1,7 @@
-# Fragmento Traefik — monorepo: --project-directory /opt/encuesta-landingqr/leads
+# Fragmento Traefik — monorepo encuesta-sorteo
+# Ruta: /leads en el dominio principal (mismo que la encuesta)
 #
 #   ./leads/deploy/deploy-vps-docker.sh
-#   # o manualmente:
-#   docker compose --project-directory /opt/encuesta-landingqr/leads \
-#     -f /root/docker-compose.yml \
-#     -f deploy/docker-compose.traefik-root.yml \
-#     up -d --build seguimiento-leads
 
 services:
   seguimiento-leads:
@@ -13,7 +9,6 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        # Monorepo en /leads; subdominio dedicado: LEADS_VITE_BASE=/
         VITE_BASE: ${LEADS_VITE_BASE:-/leads/}
     image: seguimiento-leads:latest
     container_name: seguimiento-leads
@@ -30,7 +25,8 @@ services:
     labels:
       - traefik.enable=true
       - traefik.docker.network=root_default
-      - traefik.http.routers.leadssecure.rule=Host(`${LEADS_HOST}`)
+      # Ruta /leads en el mismo dominio que la encuesta
+      - traefik.http.routers.leadssecure.rule=Host(`${LEADS_DOMAIN:-www.miprimercasafsa-sorteo.com}`) && PathPrefix(`/leads`)
       - traefik.http.routers.leadssecure.entrypoints=websecure
       - traefik.http.routers.leadssecure.tls=true
       - traefik.http.routers.leadssecure.tls.certresolver=myhttpchallenge
