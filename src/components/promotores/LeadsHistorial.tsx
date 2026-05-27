@@ -38,20 +38,33 @@ const PILL: Record<LeadStatus, { variant: 'nuevo' | 'in-progress' | 'reagendado'
   compro:      { variant: 'compro',      label: 'Compró' },
 };
 
+const ALL = '__all__';
+
 export function LeadsHistorial({ leads, promotores }: LeadsHistorialProps) {
   const [open, setOpen] = useState(false);
+  const [filtroPromotor, setFiltroPromotor] = useState(ALL);
 
-  const sorted = useMemo(
-    () =>
-      [...leads].sort((a, b) => {
-        const pd = STATUS_PRIORITY[getLeadStatus(a)] - STATUS_PRIORITY[getLeadStatus(b)];
-        if (pd !== 0) return pd;
-        return (b.fechaObtencion ?? '').localeCompare(a.fechaObtencion ?? '');
-      }),
-    [leads],
-  );
+  // Solo mostrar promotores que tienen al menos un lead
+  const promotoresConLeads = useMemo(() => {
+    const ids = new Set(leads.map((l) => l.promotorId));
+    return promotores.filter((p) => ids.has(p.id));
+  }, [leads, promotores]);
+
+  const sorted = useMemo(() => {
+    const base = filtroPromotor === ALL
+      ? leads
+      : leads.filter((l) => l.promotorId === filtroPromotor);
+
+    return [...base].sort((a, b) => {
+      const pd = STATUS_PRIORITY[getLeadStatus(a)] - STATUS_PRIORITY[getLeadStatus(b)];
+      if (pd !== 0) return pd;
+      return (b.fechaObtencion ?? '').localeCompare(a.fechaObtencion ?? '');
+    });
+  }, [leads, filtroPromotor]);
 
   if (leads.length === 0) return null;
+
+  const countLabel = filtroPromotor === ALL ? leads.length : sorted.length;
 
   return (
     <div className="space-y-3">
@@ -67,7 +80,7 @@ export function LeadsHistorial({ leads, promotores }: LeadsHistorialProps) {
             Historial de leads
           </span>
           <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-[11px] font-semibold tabular-nums text-zinc-500">
-            {leads.length}
+            {countLabel}
           </span>
         </div>
         <svg
@@ -79,39 +92,85 @@ export function LeadsHistorial({ leads, promotores }: LeadsHistorialProps) {
         </svg>
       </button>
 
-      {/* Lista desplegable */}
       {open && (
-        <ul className="space-y-2">
-          {sorted.map((lead) => {
-            const status = getLeadStatus(lead);
-            const { variant, label } = PILL[status];
-            const promotorNombre =
-              lead.promotorNombre ?? getPromotorNombre(lead.promotorId, promotores);
-
-            return (
-              <li
-                key={lead.id}
-                className={`flex min-h-[60px] items-center gap-3 rounded-xl border px-4 py-3 ${ROW_CLASS[status]}`}
+        <div className="space-y-3">
+          {/* Filtro por promotor — scroll horizontal en mobile */}
+          {promotoresConLeads.length > 1 && (
+            <div className="flex gap-2 overflow-x-auto pb-0.5" style={{ scrollbarWidth: 'none' }}>
+              <button
+                type="button"
+                onClick={() => setFiltroPromotor(ALL)}
+                style={{ touchAction: 'manipulation' }}
+                className={`h-8 shrink-0 rounded-full border px-3 text-[12px] font-semibold transition-all duration-[120ms] active:scale-[0.97] ${
+                  filtroPromotor === ALL
+                    ? 'border-brand-700 bg-brand-600 text-white'
+                    : 'border-zinc-200 bg-white text-zinc-600 active:bg-brand-50 active:border-brand-400 active:text-brand-700'
+                }`}
               >
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-[14px] font-semibold text-zinc-900">{lead.nombre}</p>
-                  <p className="mt-0.5 text-[12px] text-zinc-400">
-                    {lead.telefono}
-                    {promotorNombre && (
-                      <>
-                        <span className="mx-1.5" aria-hidden="true">·</span>
-                        {promotorNombre}
-                      </>
-                    )}
-                  </p>
-                </div>
-                <StatusPill variant={variant} dot>
-                  {label}
-                </StatusPill>
-              </li>
-            );
-          })}
-        </ul>
+                Todos
+              </button>
+              {promotoresConLeads.map((p) => {
+                const sel = filtroPromotor === p.id;
+                const count = leads.filter((l) => l.promotorId === p.id).length;
+                return (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => setFiltroPromotor(p.id)}
+                    style={{ touchAction: 'manipulation' }}
+                    className={`h-8 shrink-0 rounded-full border px-3 text-[12px] font-semibold transition-all duration-[120ms] active:scale-[0.97] ${
+                      sel
+                        ? 'border-brand-700 bg-brand-600 text-white'
+                        : 'border-zinc-200 bg-white text-zinc-600 active:bg-brand-50 active:border-brand-400 active:text-brand-700'
+                    }`}
+                  >
+                    {p.nombre}
+                    <span className={`ml-1.5 text-[11px] ${sel ? 'opacity-80' : 'text-zinc-400'}`}>
+                      {count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Lista */}
+          {sorted.length === 0 ? (
+            <p className="py-4 text-center text-[13px] text-zinc-400">Sin leads para este promotor.</p>
+          ) : (
+            <ul className="space-y-2">
+              {sorted.map((lead) => {
+                const status = getLeadStatus(lead);
+                const { variant, label } = PILL[status];
+                const promotorNombre =
+                  lead.promotorNombre ?? getPromotorNombre(lead.promotorId, promotores);
+
+                return (
+                  <li
+                    key={lead.id}
+                    className={`flex min-h-[60px] items-center gap-3 rounded-xl border px-4 py-3 ${ROW_CLASS[status]}`}
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-[14px] font-semibold text-zinc-900">{lead.nombre}</p>
+                      <p className="mt-0.5 text-[12px] text-zinc-400">
+                        {lead.telefono}
+                        {filtroPromotor === ALL && promotorNombre && (
+                          <>
+                            <span className="mx-1.5" aria-hidden="true">·</span>
+                            {promotorNombre}
+                          </>
+                        )}
+                      </p>
+                    </div>
+                    <StatusPill variant={variant} dot>
+                      {label}
+                    </StatusPill>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
       )}
     </div>
   );
