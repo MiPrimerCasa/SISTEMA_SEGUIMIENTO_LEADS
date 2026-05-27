@@ -67,8 +67,13 @@ function AppShell() {
   );
 
   const onCrearLead = useCallback(async (data: NuevoLeadData) => {
-    const newLead = await crearLead(data);
-    setLeads((prev) => [...prev, newLead]);
+    try {
+      const newLead = await crearLead(data);
+      setLeads((prev) => [...prev, newLead]);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo crear el lead');
+      throw err;
+    }
   }, []);
 
   if (!usuario) {

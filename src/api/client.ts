@@ -19,8 +19,14 @@ import {
 } from './demoData';
 
 const IS_DEMO = import.meta.env.VITE_DEMO === 'true';
-
 const STORAGE_KEY = 'mpc-crm-session';
+
+/** En monorepo (/leads/) Vite usa BASE_URL=/leads/ → /leads/api/... */
+function apiUrl(path: string) {
+  const base = (import.meta.env.BASE_URL || '/').replace(/\/$/, '');
+  const route = path.startsWith('/') ? path : `/${path}`;
+  return `${base}${route}`;
+}
 
 export function getSession(): { token: string; usuario: UsuarioSesion } | null {
   if (IS_DEMO) return { token: 'demo', usuario: DEMO_USUARIO };
@@ -43,6 +49,8 @@ export function clearSession() {
   sessionStorage.removeItem(STORAGE_KEY);
 }
 
+export const isDemoMode = IS_DEMO;
+
 async function apiFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
   const session = getSession();
   const headers: Record<string, string> = {
@@ -55,10 +63,41 @@ async function apiFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
     headers['x-usuario-nombre'] = session.usuario.nombre;
   }
 
-  const res = await fetch(path, { ...init, headers });
-  const data = await res.json().catch(() => ({}));
+  const url = apiUrl(path);
+  let res: Response;
+  try {
+    res = await fetch(url, { ...init, headers });
+  } catch {
+    throw new Error(
+      'No se pudo conectar con el servidor. En local: ejecutá npm run dev:api en otra terminal.',
+    );
+  }
+
+  const rawText = await res.text();
+  let data: Record<string, unknown> = {};
+  if (rawText) {
+    try {
+      data = JSON.parse(rawText) as Record<string, unknown>;
+    } catch {
+      if (!res.ok) {
+        throw new Error(
+          res.status === 404
+            ? `Ruta no encontrada (${url}). Si estás en producción, verificá el deploy del CRM en /leads.`
+            : `Respuesta inválida del servidor (${res.status}).`,
+        );
+      }
+    }
+  }
+
   if (!res.ok) {
-    const msg = typeof data.message === 'string' ? data.message : 'Error en la solicitud';
+    const msg =
+      typeof data.message === 'string'
+        ? data.message
+        : res.status === 401
+          ? 'Usuario o contraseña incorrectos.'
+          : res.status === 503
+            ? 'Servidor o base de datos no disponible.'
+            : `Error en la solicitud (${res.status})`;
     const detail = typeof data.detail === 'string' ? data.detail : '';
     throw new Error(detail && !msg.includes(detail) ? `${msg}\n\nDetalle: ${detail}` : msg);
   }
@@ -108,11 +147,12 @@ export async function guardarSeguimiento(leadId: string, seguimiento: Seguimient
   return data.lead;
 }
 
+/** Solo en modo demo (npm run dev:demo). En producción los leads vienen del SP de encuestas. */
 export async function crearLead(nuevoLead: NuevoLeadData) {
-  if (IS_DEMO) return createDemoLead(nuevoLead);
-  const data = await apiFetch<{ lead: Lead }>('/api/leads', {
-    method: 'POST',
-    body: JSON.stringify(nuevoLead),
-  });
-  return data.lead;
+  if (!IS_DEMO) {
+    throw new Error(
+      'Agendar cliente manual no está disponible en producción. Los leads se cargan desde la encuesta.',
+    );
+  }
+  return createDemoLead(nuevoLead);
 }

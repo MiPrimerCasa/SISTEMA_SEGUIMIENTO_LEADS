@@ -31,7 +31,7 @@ export function EventListItem({ event, onOpen }: EventListItemProps) {
             </span>
             {/* Chip de tipo */}
             <span className="inline-flex h-5 shrink-0 items-center rounded-full border border-brand-100 bg-brand-50 px-2 text-[11px] font-semibold text-brand-700">
-              Reagenda
+              {event.type === 'entrevista' ? 'Entrevista' : 'Reagenda'}
             </span>
           </div>
           <div className="flex items-center gap-1.5 text-[12px] text-zinc-400">

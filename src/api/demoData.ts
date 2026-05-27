@@ -56,6 +56,9 @@ const BASE_LEADS: Lead[] = [
     quiereEntrevista: true,
     lista: 'entrevista',
     fechaObtencion: '2026-05-20',
+    fechaAlta: '2026-05-28T15:30:00',
+    horarioEntrevista: '2026-05-28T15:30:00',
+    lugarEntrevista: 'sucursal',
     seguimiento: {},
   },
   {

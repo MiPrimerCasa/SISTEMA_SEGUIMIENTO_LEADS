@@ -1,5 +1,13 @@
 import type { Lead, Promotor } from '../../types';
-import { getPromotorNombre } from '../../domain/leads';
+import {
+  getHorarioEntrevistaLead,
+  getPromotorNombre,
+  leadCompro,
+  leadEnEntrevistaPendiente,
+  leadReagendaEntrevista,
+} from '../../domain/leads';
+
+export type CalendarEventType = 'entrevista' | 'seguimiento';
 
 export interface CalendarEvent {
   id: string;
@@ -7,26 +15,49 @@ export interface CalendarEvent {
   leadName: string;
   leadPhone: string;
   promotor: string;
-  type: 'seguimiento';
+  type: CalendarEventType;
   date: string;
   lead: Lead;
 }
 
-export function buildCalendarEvents(leads: Lead[], promotores: Promotor[]): CalendarEvent[] {
-  return leads
-    .filter(
-      (l) =>
-        l.seguimiento.resultadoEntrevista === 'reagenda' &&
-        Boolean(l.seguimiento.fechaReagenda),
-    )
-    .map((l) => ({
-      id: l.id,
+function eventoDesdeLead(l: Lead, promotores: Promotor[]): CalendarEvent | null {
+  if (leadCompro(l)) return null;
+
+  const promotor = l.promotorNombre ?? getPromotorNombre(l.promotorId, promotores);
+
+  if (leadReagendaEntrevista(l) && l.seguimiento.fechaReagenda) {
+    return {
+      id: `${l.id}-reagenda`,
       leadId: l.id,
       leadName: l.nombre,
       leadPhone: l.telefono,
-      promotor: l.promotorNombre ?? getPromotorNombre(l.promotorId, promotores),
-      type: 'seguimiento' as const,
-      date: l.seguimiento.fechaReagenda!,
+      promotor,
+      type: 'seguimiento',
+      date: l.seguimiento.fechaReagenda,
       lead: l,
-    }));
+    };
+  }
+
+  const horario = getHorarioEntrevistaLead(l);
+  if (leadEnEntrevistaPendiente(l) && horario) {
+    return {
+      id: `${l.id}-entrevista`,
+      leadId: l.id,
+      leadName: l.nombre,
+      leadPhone: l.telefono,
+      promotor,
+      type: 'entrevista',
+      date: horario,
+      lead: l,
+    };
+  }
+
+  return null;
+}
+
+/** Eventos del calendario desde leads reales (encuesta + seguimiento local). */
+export function buildCalendarEvents(leads: Lead[], promotores: Promotor[]): CalendarEvent[] {
+  return leads
+    .map((l) => eventoDesdeLead(l, promotores))
+    .filter((ev): ev is CalendarEvent => ev !== null);
 }

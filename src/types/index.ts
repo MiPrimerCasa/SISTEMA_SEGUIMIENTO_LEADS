@@ -1,5 +1,12 @@
 export type RolUsuario = 'promotor' | 'supervisor';
 export type VistaActiva = 'leads' | 'promotores' | 'calendario';
+export type ListaLead = 'entrevista' | 'contacto';
+/** Dónde quiere la entrevista el cliente (encuesta / SP). */
+export type LugarEntrevista = 'sucursal' | 'domicilio';
+export type CanalContacto = 'llamada' | 'mensaje';
+export type ResultadoEntrevista = 'sin_interes' | 'reagenda' | 'no_compro' | 'compro';
+/** sena/cien = terreno; entrega_33/entrega_55 = plan inversión */
+export type EstadoPago = 'sena' | 'cien' | 'entrega_33' | 'entrega_55';
 
 export interface NuevoLeadData {
   nombre: string;
@@ -9,11 +16,6 @@ export interface NuevoLeadData {
   promotorId: string;
   domicilio?: string;
 }
-export type ListaLead = 'entrevista' | 'contacto';
-export type CanalContacto = 'llamada' | 'mensaje';
-export type ResultadoEntrevista = 'sin_interes' | 'reagenda' | 'no_compro' | 'compro';
-/** sena/cien = terreno; entrega_33/entrega_55 = plan inversión (33k equivale al cierre del plan) */
-export type EstadoPago = 'sena' | 'cien' | 'entrega_33' | 'entrega_55';
 
 export interface Promotor {
   id: string;
@@ -56,12 +58,14 @@ export interface Lead {
   nombre: string;
   telefono: string;
   promotorId: string;
-  /** Nombre del promotor (encuestas) */
   promotorNombre?: string;
-  /** Supervisor asignado en encuesta */
   supervisorNombre?: string;
   domicilio?: string;
   quiereEntrevista: boolean;
+  /** Fecha y hora acordadas en la encuesta (ISO local). */
+  horarioEntrevista?: string;
+  lugarEntrevista?: LugarEntrevista;
+  domicilioEntrevista?: string;
   lista: ListaLead;
   fechaObtencion: string;
   fechaAlta?: string;
@@ -69,7 +73,6 @@ export interface Lead {
 }
 
 export interface UsuarioSesion {
-  /** idVendedor del SP → parámetro @idVendedor de encuestasMuestraOperador */
   id: string;
   nombre: string;
   rol: RolUsuario;
@@ -78,6 +81,5 @@ export interface UsuarioSesion {
   idOperador?: string;
   idSupervisor?: string;
   idVendedor?: string;
-  /** Cómo se calculó el rol: encuestas (idOperador vs idVendedor) o categoria (respaldo) */
   rolOrigen?: 'encuestas' | 'categoria';
 }
