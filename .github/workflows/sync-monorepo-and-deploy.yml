@@ -51,9 +51,6 @@ jobs:
         run: |
           chmod +x scripts/sync-to-monorepo.sh
           bash scripts/sync-to-monorepo.sh . encuesta-sorteo
-          # Copiar el workflow de deploy al monorepo para que lo dispare desde allí (igual que la encuesta)
-          mkdir -p encuesta-sorteo/.github/workflows
-          cp deploy/github-workflow/deploy-leads.yml encuesta-sorteo/.github/workflows/deploy-leads.yml
 
       - name: Commit y push en monorepo
         id: monorepo_push
@@ -66,7 +63,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          git add -A leads/ .github/workflows/deploy-leads.yml
+          git add -A leads/
           if git diff --staged --quiet; then
             echo "Sin cambios en leads/ respecto al monorepo."
             echo "changed=false" >> "$GITHUB_OUTPUT"
