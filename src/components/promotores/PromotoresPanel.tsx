@@ -1,5 +1,6 @@
 import { usePromotoresMetrics } from '../../hooks/usePromotoresMetrics';
 import type { Lead, Promotor } from '../../types';
+import { LeadsHistorial } from './LeadsHistorial';
 import { PromotoresChart } from './PromotoresChart';
 import { PromotoresTable } from './PromotoresTable';
 
@@ -27,6 +28,7 @@ export function PromotoresPanel({ leads, promotores }: PromotoresPanelProps) {
 
       <PromotoresTable metricas={metricas} />
       <PromotoresChart leads={leads} promotores={promotores} />
+      <LeadsHistorial leads={leads} promotores={promotores} />
     </div>
   );
 }
