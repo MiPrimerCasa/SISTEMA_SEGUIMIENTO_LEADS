@@ -73,9 +73,10 @@ Mirá **qué paso está en rojo** en el log:
 | Paso rojo | Causa habitual | Qué hacer |
 |-----------|----------------|-----------|
 | **Commit y push en monorepo** | PAT sin write, rebase con cambios locales | Revisar `MONOREPO_PUSH_TOKEN`; el workflow hace `git reset --hard` + `rebase` + push con token explícito |
-| Deploy en VPS | No corre en este repo | El deploy lo hace **encuesta-sorteo** (workflow `deploy-leads.yml`), igual que la landing. Los secrets `VPS_*` deben estar en **encuesta-sorteo**, no solo en SISTEMA_SEGUIMIENTO_LEADS |
+| **Subir leads al VPS** | `dial tcp … i/o timeout` (intermitente) | Reintentar el workflow; secrets `VPS_*` en **este** repo. Si falla SCP pero la encuesta despliega, comparar `VPS_HOST` con el de encuesta-sorteo |
+| **Desplegar leads en VPS** | Docker / healthcheck | Ver log del paso SSH |
 
-Si la encuesta despliega bien pero el CRM no: revisá Actions en **encuesta-sorteo** tras el sync, y que exista `.github/workflows/deploy-leads.yml` en el monorepo (copiar desde `deploy/github-workflow/deploy-leads.yml`).
+Deploy activo: **sync monorepo + SCP + SSH** en este repo (run verde conocida: workflow con timeout 120s). Los secrets `VPS_HOST`, `VPS_USER`, `VPS_SSH_KEY` van en **SISTEMA_SEGUIMIENTO_LEADS**.
 
 Si sigue fallando, abrí el paso rojo y buscá `fatal:` o `error message:`.
 
