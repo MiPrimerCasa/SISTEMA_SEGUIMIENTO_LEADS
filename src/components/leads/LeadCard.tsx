@@ -61,6 +61,7 @@ export function LeadCard({
   const esArchivo = variante === 'compro' || compro;
   const esSeguimiento =
     variante === 'seguimiento' || (variante !== 'compro' && reagenda && !esArchivo);
+  const esNuevo = !esArchivo && !esSeguimiento && !tieneSeguimiento;
 
   return (
     <div className="relative">
@@ -73,7 +74,9 @@ export function LeadCard({
             ? 'border-zinc-200 bg-zinc-50 active:bg-zinc-100 active:border-zinc-300 [&:not(:active)]:hover:border-zinc-300 [&:not(:active)]:hover:shadow-sm'
             : esSeguimiento
               ? 'border-brand-100 bg-brand-50 active:bg-brand-100 active:border-brand-300 [&:not(:active)]:hover:border-brand-200 [&:not(:active)]:hover:shadow-sm'
-              : 'border-zinc-200 bg-white active:bg-brand-50 active:border-brand-200 [&:not(:active)]:hover:border-zinc-300 [&:not(:active)]:hover:shadow-sm'
+              : esNuevo
+                ? 'border-[#99F6E4] bg-[#F0FDFA] active:bg-[#CCFBF1] active:border-[#5EEAD4] [&:not(:active)]:hover:border-[#5EEAD4] [&:not(:active)]:hover:shadow-sm'
+                : 'border-zinc-200 bg-white active:bg-brand-50 active:border-brand-200 [&:not(:active)]:hover:border-zinc-300 [&:not(:active)]:hover:shadow-sm'
         }`}
       >
         <div className="flex items-start justify-between gap-3">
