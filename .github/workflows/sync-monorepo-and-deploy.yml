@@ -63,7 +63,6 @@ jobs:
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git remote set-url origin "https://x-access-token:${MONOREPO_PUSH_TOKEN}@github.com/MiPrimerCasa/encuesta-sorteo.git"
 
           git add -A leads/
           if git diff --staged --quiet; then
@@ -78,8 +77,12 @@ jobs:
 
           git reset --hard HEAD
           git fetch origin main
-          git rebase origin/main
-          git push origin main
+          if ! git rebase origin/main; then
+            echo "::warning::Rebase falló; intentando merge"
+            git rebase --abort 2>/dev/null || true
+            git merge origin/main --no-edit
+          fi
+          git push "https://x-access-token:${MONOREPO_PUSH_TOKEN}@github.com/MiPrimerCasa/encuesta-sorteo.git" HEAD:main
           echo "changed=true" >> "$GITHUB_OUTPUT"
 
       - name: Deploy leads en VPS
