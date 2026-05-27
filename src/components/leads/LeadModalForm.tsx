@@ -257,7 +257,7 @@ export function LeadModalForm({
               type="button"
               onClick={onClose}
               style={{ touchAction: 'manipulation' }}
-              className="flex h-9 w-9 items-center justify-center rounded-lg bg-zinc-100 text-xl text-zinc-500 transition-colors active:bg-brand-50 active:text-brand-700"
+              className="flex h-9 w-9 items-center justify-center rounded-lg text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 active:bg-brand-50 active:text-brand-700"
               aria-label="Cerrar"
             >
               ×
@@ -268,7 +268,7 @@ export function LeadModalForm({
           <form
             id="lead-form"
             onSubmit={handleGuardar}
-            className="flex-1 space-y-7 overflow-y-auto overscroll-contain px-4 py-5"
+            className="flex-1 space-y-6 overflow-y-auto overscroll-contain px-4 py-5"
           >
             {/* 1. Canal */}
             <FormSection title="Canal de contacto" step={1} totalSteps={4}>
@@ -286,9 +286,9 @@ export function LeadModalForm({
             {/* Reagendar (solo si fue contactado) */}
             {contactado && (
               <FormSection title="Reagendar entrevista">
-                <p className="text-[14px] text-zinc-500">
+                <p className="text-[13px] leading-relaxed text-zinc-500">
                   Cliente contactado por{' '}
-                  <span className="font-medium text-zinc-700">{canalLabel}</span>.
+                  <strong className="font-semibold text-zinc-700">{canalLabel}</strong>.
                   Si pide otra fecha, registrala acá.
                 </p>
                 <ButtonGroup

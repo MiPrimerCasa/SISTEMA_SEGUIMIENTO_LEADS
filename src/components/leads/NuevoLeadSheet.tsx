@@ -144,7 +144,7 @@ export function NuevoLeadSheet({
               type="button"
               onClick={onClose}
               style={{ touchAction: 'manipulation' }}
-              className="flex h-9 w-9 items-center justify-center rounded-lg bg-zinc-100 text-xl text-zinc-500 transition-colors active:bg-brand-50 active:text-brand-700"
+              className="flex h-9 w-9 items-center justify-center rounded-lg text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 active:bg-brand-50 active:text-brand-700"
               aria-label="Cerrar"
             >
               ×
