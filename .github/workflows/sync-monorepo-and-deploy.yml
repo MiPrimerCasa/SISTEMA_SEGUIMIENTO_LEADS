@@ -1,10 +1,13 @@
-# Sync SISTEMA_SEGUIMIENTO_LEADS → encuesta-sorteo/leads/ → deploy VPS
+# Sync SISTEMA_SEGUIMIENTO_LEADS → encuesta-sorteo/leads/
+# El deploy al VPS lo hace el monorepo (igual que la encuesta): push a main en
+# encuesta-sorteo dispara .github/workflows/deploy-leads.yml con git pull + Docker.
 #
-# Secrets (Settings → Actions):
+# Secrets en ESTE repo:
 #   MONOREPO_PUSH_TOKEN — PAT con write en MiPrimerCasa/encuesta-sorteo
-#   VPS_HOST, VPS_USER, VPS_SSH_KEY
+#
+# Secrets SSH (VPS_HOST, VPS_USER, VPS_SSH_KEY) van en encuesta-sorteo, no aquí.
 
-name: Sync monorepo y deploy producción
+name: Sync monorepo (deploy vía encuesta-sorteo)
 
 on:
   push:
@@ -52,6 +55,11 @@ jobs:
           chmod +x scripts/sync-to-monorepo.sh
           bash scripts/sync-to-monorepo.sh . encuesta-sorteo
 
+      - name: Sincronizar workflow deploy-leads al monorepo
+        run: |
+          mkdir -p encuesta-sorteo/.github/workflows
+          cp deploy/github-workflow/deploy-leads.yml encuesta-sorteo/.github/workflows/deploy-leads.yml
+
       - name: Commit y push en monorepo
         id: monorepo_push
         working-directory: encuesta-sorteo
@@ -63,7 +71,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          git add -A leads/
+          git add -A leads/ .github/workflows/deploy-leads.yml
           if git diff --staged --quiet; then
             echo "Sin cambios en leads/ respecto al monorepo."
             echo "changed=false" >> "$GITHUB_OUTPUT"
@@ -85,74 +93,6 @@ jobs:
           git push origin main
           echo "changed=true" >> "$GITHUB_OUTPUT"
 
-      - name: Empaquetar leads/ para VPS
-        if: success()
-        run: tar -czf leads-sync.tgz -C encuesta-sorteo leads
-
-      - name: Subir leads al VPS
-        if: success()
-        uses: appleboy/scp-action@v1.0.0
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_SSH_KEY }}
-          port: ${{ secrets.VPS_PORT || '22' }}
-          timeout: 120s
-          command_timeout: 20m
-          source: leads-sync.tgz
-          target: /tmp/
-
-      - name: Desplegar leads en VPS
-        if: success()
-        uses: appleboy/ssh-action@v1.2.2
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_SSH_KEY }}
-          port: ${{ secrets.VPS_PORT || '22' }}
-          timeout: 120s
-          command_timeout: 20m
-          script: |
-            set -euo pipefail
-            MONOREPO_ROOT="${MONOREPO_ROOT:-/opt/encuesta-landingqr}"
-            cd "$MONOREPO_ROOT"
-            # Restaurar archivos de despliegue que el tar NO trae (porque se excluyen en sync-to-monorepo.sh).
-            ENV_BACKUP=""
-            TRAEFIK_BACKUP=""
-
-            if [[ -f leads/.env ]]; then
-              ENV_BACKUP="$(mktemp)"
-              cp -a leads/.env "$ENV_BACKUP"
-            fi
-            if [[ -f leads/deploy/docker-compose.traefik-root.yml ]]; then
-              TRAEFIK_BACKUP="$(mktemp)"
-              cp -a leads/deploy/docker-compose.traefik-root.yml "$TRAEFIK_BACKUP"
-            fi
-
-            rm -rf leads
-            tar -xzf /tmp/leads-sync.tgz -C "$MONOREPO_ROOT"
-            rm -f /tmp/leads-sync.tgz
-
-            if [[ -n "$ENV_BACKUP" && -f "$ENV_BACKUP" ]]; then
-              mkdir -p leads
-              cp -a "$ENV_BACKUP" leads/.env
-              rm -f "$ENV_BACKUP"
-            fi
-            if [[ -n "$TRAEFIK_BACKUP" && -f "$TRAEFIK_BACKUP" ]]; then
-              mkdir -p leads/deploy
-              cp -a "$TRAEFIK_BACKUP" leads/deploy/docker-compose.traefik-root.yml
-              rm -f "$TRAEFIK_BACKUP"
-            fi
-
-            DEPLOY_SCRIPT="leads/deploy/deploy-vps-docker.sh"
-            if [[ ! -f "$DEPLOY_SCRIPT" ]]; then
-              echo "ERROR: no existe $DEPLOY_SCRIPT en el VPS (probablemente faltan archivos de despliegue del monorepo)."
-              exit 1
-            fi
-            chmod +x "$DEPLOY_SCRIPT" 2>/dev/null || true
-            export MONOREPO_ROOT SKIP_MONOREPO_GIT_PULL=1
-            bash "$DEPLOY_SCRIPT"
-
       - name: Resumen
         if: always()
         run: |
@@ -163,4 +103,5 @@ jobs:
           echo "| Repo origen | \`${{ github.repository }}\` @ \`${{ github.sha }}\` |" >> "$GITHUB_STEP_SUMMARY"
           echo "| Monorepo | [encuesta-sorteo](https://github.com/MiPrimerCasa/encuesta-sorteo) |" >> "$GITHUB_STEP_SUMMARY"
           echo "| Cambios en leads/ | ${{ steps.monorepo_push.outputs.changed }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Deploy VPS | Automático en [encuesta-sorteo](https://github.com/MiPrimerCasa/encuesta-sorteo/actions) si hubo push a \`leads/**\` |" >> "$GITHUB_STEP_SUMMARY"
           echo "| URL | https://www.miprimercasafsa-sorteo.com/leads |" >> "$GITHUB_STEP_SUMMARY"

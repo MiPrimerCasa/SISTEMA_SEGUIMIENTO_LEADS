@@ -32,11 +32,14 @@ jobs:
             set -euo pipefail
             MONOREPO_ROOT="${MONOREPO_ROOT:-/opt/encuesta-landingqr}"
             cd "$MONOREPO_ROOT"
+            git config --global --add safe.directory "$MONOREPO_ROOT" 2>/dev/null || true
+            git checkout -f main 2>/dev/null || git checkout -fB main origin/main
             git fetch origin main
             git reset --hard origin/main
-            test -d leads/deploy/deploy-vps-docker.sh
+            test -f leads/deploy/deploy-vps-docker.sh
             chmod +x leads/deploy/deploy-vps-docker.sh
-            MONOREPO_ROOT="$MONOREPO_ROOT" bash leads/deploy/deploy-vps-docker.sh
+            export MONOREPO_ROOT SKIP_MONOREPO_GIT_PULL=1
+            bash leads/deploy/deploy-vps-docker.sh
 
       - name: Notify Slack (optional)
         if: success() && secrets.SLACK_WEBHOOK_URL != ''
