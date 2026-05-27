@@ -85,7 +85,21 @@ jobs:
           git push origin main
           echo "changed=true" >> "$GITHUB_OUTPUT"
 
-      - name: Deploy leads en VPS
+      - name: Empaquetar leads/ para VPS
+        if: success()
+        run: tar -czf leads-sync.tgz -C encuesta-sorteo leads
+
+      - name: Subir leads al VPS
+        if: success()
+        uses: appleboy/scp-action@v1.0.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          source: leads-sync.tgz
+          target: /tmp/
+
+      - name: Desplegar leads en VPS
         if: success()
         uses: appleboy/ssh-action@v1.2.2
         with:
@@ -95,24 +109,26 @@ jobs:
           script: |
             set -euo pipefail
             MONOREPO_ROOT="${MONOREPO_ROOT:-/opt/encuesta-landingqr}"
-            if [[ ! -d "$MONOREPO_ROOT/.git" ]]; then
-              echo "ERROR: $MONOREPO_ROOT no es un repo git"
-              exit 1
-            fi
             cd "$MONOREPO_ROOT"
-            git config --global --add safe.directory "$MONOREPO_ROOT" 2>/dev/null || true
-            git checkout -f main 2>/dev/null || git checkout -fB main origin/main
-            git reset --hard HEAD
-            git clean -fd -e .env -e 'leads/.env' 2>/dev/null || true
-            git fetch origin main
-            git reset --hard origin/main
+            ENV_BACKUP=""
+            if [[ -f leads/.env ]]; then
+              ENV_BACKUP="$(mktemp)"
+              cp -a leads/.env "$ENV_BACKUP"
+            fi
+            rm -rf leads
+            tar -xzf /tmp/leads-sync.tgz -C "$MONOREPO_ROOT"
+            rm -f /tmp/leads-sync.tgz
+            if [[ -n "$ENV_BACKUP" && -f "$ENV_BACKUP" ]]; then
+              cp -a "$ENV_BACKUP" leads/.env
+              rm -f "$ENV_BACKUP"
+            fi
             DEPLOY_SCRIPT="leads/deploy/deploy-vps-docker.sh"
             if [[ ! -f "$DEPLOY_SCRIPT" ]]; then
-              DEPLOY_SCRIPT="deploy/deploy-vps-docker.sh"
+              echo "ERROR: no existe $DEPLOY_SCRIPT"
+              exit 1
             fi
-            chmod +x deploy/ensure-leads-env.sh "$DEPLOY_SCRIPT" 2>/dev/null || true
+            chmod +x "$DEPLOY_SCRIPT" 2>/dev/null || true
             export MONOREPO_ROOT SKIP_MONOREPO_GIT_PULL=1
-            bash deploy/ensure-leads-env.sh 2>/dev/null || true
             bash "$DEPLOY_SCRIPT"
 
       - name: Resumen
