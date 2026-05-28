@@ -1,5 +1,5 @@
 export type RolUsuario = 'promotor' | 'supervisor';
-export type VistaActiva = 'leads' | 'promotores' | 'calendario';
+export type VistaActiva = 'leads' | 'promotores' | 'metricas' | 'calendario';
 
 export interface NuevoLeadData {
   nombre: string;

@@ -8,6 +8,13 @@ export const DEMO_USUARIO: UsuarioSesion = {
   rol: 'supervisor',
 };
 
+export const DEMO_USUARIO_PROMOTOR: UsuarioSesion = {
+  id: 'prom-1',
+  nombre: 'Martín González',
+  rol: 'promotor',
+  idVendedor: 'prom-1',
+};
+
 // ─── Catálogo ─────────────────────────────────────────────────────────────────
 
 export const DEMO_PROMOTORES: Promotor[] = [

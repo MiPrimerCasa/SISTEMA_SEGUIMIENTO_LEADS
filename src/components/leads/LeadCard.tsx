@@ -39,7 +39,7 @@ function WhatsAppIcon() {
 interface LeadCardProps {
   lead: Lead;
   onClick: (lead: Lead) => void;
-  variante?: 'activo' | 'seguimiento' | 'compro';
+  variante?: 'activo' | 'seguimiento' | 'compro' | 'no-compro';
   promotores?: Promotor[];
   productos?: Producto[];
   barrios?: Barrio[];
@@ -65,11 +65,12 @@ export function LeadCard({
   const tieneSeguimiento = Boolean(
     lead.seguimiento?.canal || lead.seguimiento?.huboEntrevista != null,
   );
-  const esArchivo = variante === 'compro' || compro;
+  const esNoCompro   = variante === 'no-compro';
+  const esArchivo    = variante === 'compro' || (compro && !esNoCompro);
   const esSeguimiento =
-    variante === 'seguimiento' || (variante !== 'compro' && reagenda && !esArchivo);
-  const esContactado = !esArchivo && !esSeguimiento && tieneSeguimiento;
-  const esNuevo      = !esArchivo && !esSeguimiento && !tieneSeguimiento;
+    !esNoCompro && (variante === 'seguimiento' || (variante !== 'compro' && reagenda && !esArchivo));
+  const esContactado = !esArchivo && !esSeguimiento && !esNoCompro && tieneSeguimiento;
+  const esNuevo      = !esArchivo && !esSeguimiento && !esNoCompro && !tieneSeguimiento;
 
   return (
     <div className="relative">
@@ -78,8 +79,10 @@ export function LeadCard({
         onClick={() => onClick(lead)}
         style={{ touchAction: 'manipulation' }}
         className={`w-full rounded-xl border p-4 pb-14 text-left transition-[background,border-color,transform] duration-[140ms] ease-out active:scale-[0.995] md:p-5 md:pb-14 ${
-          esArchivo
-            ? 'border-zinc-200 bg-zinc-50 active:bg-zinc-100 active:border-zinc-300 [&:not(:active)]:hover:border-zinc-300 [&:not(:active)]:hover:shadow-sm'
+          esNoCompro
+            ? 'border-red-500 bg-zinc-900 active:bg-zinc-800 active:border-red-400 [&:not(:active)]:hover:border-red-400 [&:not(:active)]:hover:shadow-sm'
+            : esArchivo
+            ? 'border-zinc-300 bg-zinc-200 active:bg-zinc-300 active:border-zinc-400 [&:not(:active)]:hover:border-zinc-400 [&:not(:active)]:hover:shadow-sm'
             : esSeguimiento
               ? 'border-brand-100 bg-brand-50 active:bg-brand-100 active:border-brand-300 [&:not(:active)]:hover:border-brand-200 [&:not(:active)]:hover:shadow-sm'
               : esContactado
@@ -90,7 +93,7 @@ export function LeadCard({
         }`}
       >
         <div className="flex items-start justify-between gap-3">
-          <h3 className="text-[15px] font-semibold leading-snug text-zinc-900">{lead.nombre}</h3>
+          <h3 className={`text-[15px] font-semibold leading-snug ${esNoCompro ? 'text-white' : 'text-zinc-900'}`}>{lead.nombre}</h3>
           <div className="shrink-0">
             {esArchivo && <StatusPill variant="compro" dot>Compró</StatusPill>}
             {esSeguimiento && !esArchivo && (
@@ -107,22 +110,22 @@ export function LeadCard({
 
         <dl className="mt-3 space-y-1">
           <div className="text-[13px]">
-            <dt className="inline text-zinc-400">Tel: </dt>
-            <dd className="inline text-zinc-600">{lead.telefono}</dd>
+            <dt className={`inline ${esNoCompro ? 'text-zinc-400' : 'text-zinc-400'}`}>Tel: </dt>
+            <dd className={`inline ${esNoCompro ? 'text-zinc-300' : 'text-zinc-600'}`}>{lead.telefono}</dd>
           </div>
           <div className="text-[13px]">
             <dt className="inline text-zinc-400">Promotor: </dt>
-            <dd className="inline text-zinc-600">
+            <dd className={`inline ${esNoCompro ? 'text-zinc-300' : 'text-zinc-600'}`}>
               {lead.promotorNombre ?? getPromotorNombre(lead.promotorId, promotores)}
               {lead.supervisorNombre && lead.supervisorNombre !== lead.promotorNombre && (
-                <span className="text-zinc-400"> · Sup. {lead.supervisorNombre}</span>
+                <span className={esNoCompro ? 'text-zinc-500' : 'text-zinc-400'}> · Sup. {lead.supervisorNombre}</span>
               )}
             </dd>
           </div>
           {lead.domicilio && (
             <div className="text-[13px]">
               <dt className="inline text-zinc-400">Dir: </dt>
-              <dd className="inline text-zinc-600">{lead.domicilio}</dd>
+              <dd className={`inline ${esNoCompro ? 'text-zinc-300' : 'text-zinc-600'}`}>{lead.domicilio}</dd>
             </div>
           )}
         </dl>
