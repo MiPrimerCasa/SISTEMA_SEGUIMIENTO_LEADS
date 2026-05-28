@@ -1,0 +1,3 @@
+# Scripts de deploy deben ser LF en el repo (bash en Linux falla con CRLF).
+deploy/*.sh text eol=lf
+scripts/*.sh text eol=lf
