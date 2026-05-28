@@ -34,6 +34,16 @@ function slugId(texto) {
   );
 }
 
+function parseFuente(raw) {
+  if (!raw) return null;
+  const v = String(raw).toLowerCase().trim();
+  if (v.includes('qr')) return 'qr';
+  if (v.includes('app')) return 'app';
+  if (v.includes('face') || v.includes('fb')) return 'facebook';
+  if (v.includes('insta') || v.includes('ig')) return 'instagram';
+  return null;
+}
+
 function parseSiNo(valor) {
   return String(valor ?? '')
     .trim()
@@ -191,6 +201,9 @@ export function mapEncuestaRowToLead(row, seguimientoLocal = {}) {
   const horarioRaw = pickField(row, 'Horario de entrevista', 'Horario de entrevista ');
   const horarioIso = parseHorarioEntrevista(horarioRaw);
   const contacto = pickField(row, 'Contacto en (', 'Contacto en', 'Contacto');
+  const fuenteDB = parseFuente(
+    pickField(row, 'fuente', 'Fuente', 'canal_origen', 'Canal origen', 'origen_lead', 'Canal', 'canal'),
+  );
 
   const fechaBase = horarioIso ? horarioIso.slice(0, 10) : new Date().toISOString().slice(0, 10);
   const lista = horarioIso || quiereAsesoramiento ? 'entrevista' : 'contacto';
@@ -198,7 +211,8 @@ export function mapEncuestaRowToLead(row, seguimientoLocal = {}) {
   const seguimientoRemoto = seguimientoLocal[usuario] ?? {};
   const observacionesEncuesta = buildObservacionesEncuesta(row);
   const seguimiento = {
-    ...seguimientoRemoto,
+    fuente: fuenteDB,       // valor de BD como base
+    ...seguimientoRemoto,   // override del usuario si ya editó desde la app
     observaciones:
       [seguimientoRemoto.observaciones, observacionesEncuesta].filter(Boolean).join('\n') ||
       undefined,

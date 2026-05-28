@@ -6,7 +6,14 @@ import {
   leadReagendaEntrevista,
 } from '../../domain/leads';
 import { etiquetaPagoProducto } from '../../domain/venta';
-import type { Barrio, Lead, Producto, Promotor } from '../../types';
+import type { Barrio, FuenteLead, Lead, Producto, Promotor } from '../../types';
+
+const FUENTE_LABEL: Record<FuenteLead, string> = {
+  qr: 'QR',
+  app: 'App',
+  facebook: 'Facebook',
+  instagram: 'Instagram',
+};
 import { StatusPill } from '../ui/StatusPill';
 
 function whatsappUrl(telefono: string): string {
@@ -61,7 +68,8 @@ export function LeadCard({
   const esArchivo = variante === 'compro' || compro;
   const esSeguimiento =
     variante === 'seguimiento' || (variante !== 'compro' && reagenda && !esArchivo);
-  const esNuevo = !esArchivo && !esSeguimiento && !tieneSeguimiento;
+  const esContactado = !esArchivo && !esSeguimiento && tieneSeguimiento;
+  const esNuevo      = !esArchivo && !esSeguimiento && !tieneSeguimiento;
 
   return (
     <div className="relative">
@@ -74,9 +82,11 @@ export function LeadCard({
             ? 'border-zinc-200 bg-zinc-50 active:bg-zinc-100 active:border-zinc-300 [&:not(:active)]:hover:border-zinc-300 [&:not(:active)]:hover:shadow-sm'
             : esSeguimiento
               ? 'border-brand-100 bg-brand-50 active:bg-brand-100 active:border-brand-300 [&:not(:active)]:hover:border-brand-200 [&:not(:active)]:hover:shadow-sm'
-              : esNuevo
-                ? 'border-[#99F6E4] bg-[#F0FDFA] active:bg-[#CCFBF1] active:border-[#5EEAD4] [&:not(:active)]:hover:border-[#5EEAD4] [&:not(:active)]:hover:shadow-sm'
-                : 'border-zinc-200 bg-white active:bg-brand-50 active:border-brand-200 [&:not(:active)]:hover:border-zinc-300 [&:not(:active)]:hover:shadow-sm'
+              : esContactado
+                ? 'border-amber-200 bg-amber-50 active:bg-amber-100 active:border-amber-300 [&:not(:active)]:hover:border-amber-300 [&:not(:active)]:hover:shadow-sm'
+                : esNuevo
+                  ? 'border-[#99F6E4] bg-[#F0FDFA] active:bg-[#CCFBF1] active:border-[#5EEAD4] [&:not(:active)]:hover:border-[#5EEAD4] [&:not(:active)]:hover:shadow-sm'
+                  : 'border-zinc-200 bg-white active:bg-brand-50 active:border-brand-200 [&:not(:active)]:hover:border-zinc-300 [&:not(:active)]:hover:shadow-sm'
         }`}
       >
         <div className="flex items-start justify-between gap-3">
@@ -86,8 +96,8 @@ export function LeadCard({
             {esSeguimiento && !esArchivo && (
               <StatusPill variant="reagendado" dot>En seguimiento</StatusPill>
             )}
-            {!esArchivo && !reagenda && tieneSeguimiento && (
-              <StatusPill variant="in-progress" dot>Contactado</StatusPill>
+            {esContactado && (
+              <StatusPill variant="contactado" dot>Contactado</StatusPill>
             )}
             {!esArchivo && !esSeguimiento && !tieneSeguimiento && !reagenda && (
               <StatusPill variant="nuevo" dot>Nuevo</StatusPill>
@@ -145,6 +155,13 @@ export function LeadCard({
           </div>
         )}
       </button>
+
+      {/* Badge fuente — bottom-left */}
+      {lead.seguimiento?.fuente && (
+        <span className="absolute bottom-4 left-4 inline-flex items-center rounded-full border border-zinc-200 bg-white px-2 py-0.5 text-[11px] font-semibold text-zinc-500">
+          {FUENTE_LABEL[lead.seguimiento.fuente]}
+        </span>
+      )}
 
       {/* Botón WhatsApp — hermano del button, no hijo (HTML válido) */}
       <a

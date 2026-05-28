@@ -19,8 +19,10 @@ export function useLeadsFilter(leads: Lead[]) {
     );
     const activos = leads.filter((l) => !leadCompro(l) && !leadReagendaEntrevista(l));
 
-    const entrevistaPendiente = fifoSort(activos.filter((l) => l.lista === 'entrevista'));
-    const paraContactar = fifoSort(activos.filter((l) => l.lista === 'contacto'));
+    const fueContactado = (l: Lead) =>
+      Boolean(l.seguimiento?.canal || l.seguimiento?.huboEntrevista != null);
+    const entrevistaPendiente = fifoSort(activos.filter((l) => !fueContactado(l)));
+    const paraContactar      = fifoSort(activos.filter(fueContactado));
 
     return { entrevistaPendiente, paraContactar, seguimiento, compraron };
   }, [leads]);

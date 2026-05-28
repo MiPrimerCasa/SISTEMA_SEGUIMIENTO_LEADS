@@ -24,6 +24,7 @@ import { DateTimePicker } from '../ui/DateTimePicker';
 const emptyReferido = (): Referido => ({ nombre: '', telefono: '' });
 
 interface FormState {
+  confirmoEntrevista: boolean | null;
   canal: SeguimientoLead['canal'];
   huboEntrevista: boolean | null;
   resultadoEntrevista: SeguimientoLead['resultadoEntrevista'];
@@ -46,6 +47,7 @@ function buildInitialForm(lead: Lead | null): FormState {
     estadoPago = 'entrega_33';
   }
   return {
+    confirmoEntrevista: s.confirmoEntrevista ?? null,
     canal: s.canal ?? null,
     huboEntrevista: s.huboEntrevista ?? null,
     resultadoEntrevista: s.resultadoEntrevista ?? null,
@@ -182,6 +184,8 @@ export function LeadModalForm({
     setErrorVenta('');
 
     const seguimiento: SeguimientoLead = {
+      fuente: lead.seguimiento?.fuente,
+      confirmoEntrevista: form.confirmoEntrevista,
       canal: form.canal,
       huboEntrevista: esReagenda ? false : form.huboEntrevista,
       resultadoEntrevista: esReagenda ? 'reagenda' : form.resultadoEntrevista,
@@ -270,8 +274,21 @@ export function LeadModalForm({
             onSubmit={handleGuardar}
             className="flex-1 space-y-6 overflow-y-auto overscroll-contain px-4 py-5"
           >
-            {/* 1. Canal */}
-            <FormSection title="Canal de contacto" step={1} totalSteps={4}>
+            {/* 1. Confirmación entrevista */}
+            <FormSection title="¿Confirmó entrevista?" step={1} totalSteps={5}>
+              <ButtonGroup
+                name="confirmoEntrevista"
+                options={[
+                  { value: true, label: 'Sí' },
+                  { value: false, label: 'No' },
+                ]}
+                value={form.confirmoEntrevista}
+                onChange={(v) => patch({ confirmoEntrevista: v })}
+              />
+            </FormSection>
+
+            {/* 2. Canal */}
+            <FormSection title="Canal de contacto" step={2} totalSteps={5}>
               <ButtonGroup
                 name="canal"
                 options={[
@@ -317,11 +334,11 @@ export function LeadModalForm({
               </FormSection>
             )}
 
-            {/* 2. Entrevista */}
+            {/* 3. Entrevista */}
             <FormSection
               title="Entrevista"
-              step={2}
-              totalSteps={4}
+              step={3}
+              totalSteps={5}
               visible={!form.reagendarEntrevista}
             >
               <ButtonGroup
@@ -547,8 +564,8 @@ export function LeadModalForm({
               </p>
             )}
 
-            {/* 3. Referidos */}
-            <FormSection title="Referidos" step={3} totalSteps={4}>
+            {/* 4. Referidos */}
+            <FormSection title="Referidos" step={4} totalSteps={5}>
               <ButtonGroup
                 name="referidos"
                 label="¿Brindó referidos?"
@@ -606,8 +623,8 @@ export function LeadModalForm({
               )}
             </FormSection>
 
-            {/* 4. Observaciones */}
-            <FormSection title="Observaciones" step={4} totalSteps={4}>
+            {/* 5. Observaciones */}
+            <FormSection title="Observaciones" step={5} totalSteps={5}>
               <textarea
                 value={form.observaciones}
                 onChange={(e) => patch({ observaciones: e.target.value })}

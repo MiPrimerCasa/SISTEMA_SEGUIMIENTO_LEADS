@@ -8,8 +8,11 @@ export interface NuevoLeadData {
   quiereEntrevista: boolean;
   promotorId: string;
   domicilio?: string;
+  origen: 'sorteo' | 'manual' | 'redes';
 }
 export type ListaLead = 'entrevista' | 'contacto';
+export type OrigenLead = 'encuesta' | 'sorteo' | 'manual' | 'redes';
+export type FuenteLead = 'qr' | 'app' | 'facebook' | 'instagram';
 export type CanalContacto = 'llamada' | 'mensaje';
 export type ResultadoEntrevista = 'sin_interes' | 'reagenda' | 'no_compro' | 'compro';
 /** sena/cien = terreno; entrega_33/entrega_55 = plan inversión (33k equivale al cierre del plan) */
@@ -38,6 +41,8 @@ export interface Referido {
 }
 
 export interface SeguimientoLead {
+  fuente?: FuenteLead | null;
+  confirmoEntrevista?: boolean | null;
   canal?: CanalContacto | null;
   huboEntrevista?: boolean | null;
   resultadoEntrevista?: ResultadoEntrevista | null;
@@ -63,6 +68,7 @@ export interface Lead {
   domicilio?: string;
   quiereEntrevista: boolean;
   lista: ListaLead;
+  origen?: OrigenLead;
   fechaObtencion: string;
   fechaAlta?: string;
   seguimiento: SeguimientoLead;
