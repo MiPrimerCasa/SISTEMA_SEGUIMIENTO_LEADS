@@ -101,13 +101,16 @@ app.get('/api/leads', async (req, res) => {
     getDb();
     const leads = await listLeadsFromEncuestas(usuario);
     const conTelefono = leads.filter((l) => l.telefono).length;
+    const conFuente = leads.filter((l) => l.seguimiento?.fuente).length;
     return res.json({
       leads,
       source: 'produccion',
       sp: process.env.SP_ENCUESTAS || 'encuestasMuestraOperador',
       meta: {
         telefonoDesde: 'encuesta.telefono (encuestasMuestraOperador)',
+        origenDesde: 'encuesta.origen → seguimiento.fuente (métricas de origen)',
         leadsConTelefono: conTelefono,
+        leadsConFuente: conFuente,
         leadsTotal: leads.length,
       },
     });
