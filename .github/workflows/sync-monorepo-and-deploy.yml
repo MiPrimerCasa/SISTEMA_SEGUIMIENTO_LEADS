@@ -19,7 +19,13 @@ permissions:
   contents: read
 
 jobs:
+  # Debe pasar antes de tocar el monorepo (activar "Require status checks" en main).
+  ci:
+    uses: ./.github/workflows/ci.yml
+    secrets: inherit
+
   sync-and-deploy:
+    needs: ci
     runs-on: ubuntu-latest
     environment:
       name: production
@@ -52,6 +58,11 @@ jobs:
           chmod +x scripts/sync-to-monorepo.sh
           bash scripts/sync-to-monorepo.sh . encuesta-sorteo
 
+      - name: Sincronizar workflow deploy-leads al monorepo
+        run: |
+          mkdir -p encuesta-sorteo/.github/workflows
+          cp deploy/github-workflow/deploy-leads.yml encuesta-sorteo/.github/workflows/deploy-leads.yml
+
       - name: Commit y push en monorepo
         id: monorepo_push
         working-directory: encuesta-sorteo
@@ -63,7 +74,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          git add -A leads/
+          git add -A leads/ .github/workflows/deploy-leads.yml
           if git diff --staged --quiet; then
             echo "Sin cambios en leads/ respecto al monorepo."
             echo "changed=false" >> "$GITHUB_OUTPUT"

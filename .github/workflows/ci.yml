@@ -1,0 +1,53 @@
+# Calidad antes de publicar: build + smoke de rutas del servidor.
+# El workflow de sync/deploy a producción depende de este job (branch protection recomendado).
+
+name: CI
+
+on:
+  workflow_call:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Compilar (TypeScript + Vite)
+        run: npm run build
+
+      - name: Smoke rutas API (APP_BASE_PATH=/leads)
+        run: |
+          node --input-type=module -e "
+          import { createApp } from './server/create-app.js';
+          import path from 'node:path';
+          process.env.APP_BASE_PATH = '/leads';
+          const app = createApp(path.resolve('dist'));
+          const srv = app.listen(0, async () => {
+            const port = srv.address().port;
+            for (const p of ['/leads/api/health/live', '/api/health/live']) {
+              const r = await fetch('http://127.0.0.1:' + port + p);
+              if (!r.ok) {
+                console.error('FAIL', p, r.status);
+                process.exit(1);
+              }
+            }
+            console.log('OK health/live en /leads y /api');
+            srv.close();
+          });
+          "

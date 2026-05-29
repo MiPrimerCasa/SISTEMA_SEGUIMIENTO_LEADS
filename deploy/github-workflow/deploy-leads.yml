@@ -20,6 +20,9 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://www.miprimercasafsa-sorteo.com/leads
     steps:
       - name: Deploy leads via SSH
         uses: appleboy/ssh-action@v1.2.0
@@ -40,6 +43,24 @@ jobs:
             chmod +x leads/deploy/deploy-vps-docker.sh
             export MONOREPO_ROOT SKIP_MONOREPO_GIT_PULL=1
             bash leads/deploy/deploy-vps-docker.sh
+
+      # Prueba desde Internet (no solo desde el VPS): si falla, el deploy queda rojo.
+      - name: Verificar URL pública del CRM
+        run: |
+          set -euo pipefail
+          URL="https://www.miprimercasafsa-sorteo.com/leads/api/health/live"
+          for i in 1 2 3 4 5; do
+            code=$(curl -sk -o /tmp/leads-health.json -w '%{http_code}' --max-time 25 "$URL" || echo "000")
+            echo "Intento $i: HTTP $code"
+            if [[ "$code" == "200" ]] && grep -q '"ok":true' /tmp/leads-health.json 2>/dev/null; then
+              cat /tmp/leads-health.json
+              echo "OK — CRM accesible en producción"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "ERROR: $URL no respondió OK tras deploy"
+          exit 1
 
       - name: Notify Slack (optional)
         if: success() && secrets.SLACK_WEBHOOK_URL != ''
