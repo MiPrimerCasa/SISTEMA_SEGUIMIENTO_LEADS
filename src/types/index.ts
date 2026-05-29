@@ -26,8 +26,10 @@ export interface NuevoLeadData {
   lista: ListaLead;
   quiereEntrevista: boolean;
   promotorId: string;
-  /** Código SP @usuario (SORTEO01_V1). Supervisor: del promotor elegido. */
+  /** Código SP @usuario (ej. SORTEO01S21P01). Supervisor: del promotor elegido. */
   promotorCodigo?: string;
+  /** Nombre del promotor (supervisor elige en combo; promotor = sesión). */
+  promotorNombre?: string;
   domicilio?: string;
   origen: OrigenIngresoManual;
   observaciones?: string;
