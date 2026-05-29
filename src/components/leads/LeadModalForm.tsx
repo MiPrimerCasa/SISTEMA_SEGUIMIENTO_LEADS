@@ -72,14 +72,6 @@ function activarReagenda(): Partial<FormState> {
   };
 }
 
-function desactivarReagenda(form: FormState): Partial<FormState> {
-  return {
-    reagendarEntrevista: false,
-    resultadoEntrevista: form.resultadoEntrevista === 'reagenda' ? null : form.resultadoEntrevista,
-    fechaReagenda: '',
-  };
-}
-
 interface LeadModalFormProps {
   lead: Lead | null;
   open: boolean;
