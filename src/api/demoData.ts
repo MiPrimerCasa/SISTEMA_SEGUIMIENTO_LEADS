@@ -49,10 +49,18 @@ type LinksCatalogJson = {
 
 /** Links de redes del promotor/supervisor demo (mismo catálogo que producción). */
 export function getDemoLinksRedes(usuario: UsuarioSesion): LinksRedes {
-  const codigo = String(usuario.codigoCarga ?? 'SORTEO01S21P01')
-    .trim()
-    .toUpperCase();
-  const entry = (linksCatalog as LinksCatalogJson).byCodigo[codigo];
+  const catalog = linksCatalog as LinksCatalogJson & {
+    byNombre?: Record<string, { codigo: string; vendedor?: string }>;
+  };
+
+  let codigo = String(usuario.codigoCarga ?? '').trim().toUpperCase();
+  if (!codigo && usuario.nombre && catalog.byNombre) {
+    const norm = usuario.nombre.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    codigo = catalog.byNombre[norm]?.codigo ?? '';
+  }
+  if (!codigo) codigo = 'SORTEO01S21P01';
+
+  const entry = catalog.byCodigo[codigo];
   if (!entry) {
     return {
       codigo,
