@@ -26,7 +26,13 @@ jobs:
           cache: npm
 
       - name: Instalar dependencias
-        run: npm ci
+        run: |
+          npm ci
+          # Workaround npm optional deps en Linux (mismo que Dockerfile)
+          npm i --no-save \
+            @rollup/rollup-linux-x64-gnu \
+            lightningcss-linux-x64-gnu \
+            @tailwindcss/oxide-linux-x64-gnu
 
       - name: Compilar (TypeScript + Vite)
         run: npm run build
