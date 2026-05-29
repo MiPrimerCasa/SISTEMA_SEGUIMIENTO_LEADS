@@ -19,16 +19,11 @@ function IconInstagram({ className }: { className?: string }) {
   );
 }
 
-async function abrirCompartir(url: string, red: 'Instagram' | 'Facebook') {
-  const shareData: ShareData = {
-    title: 'Mi Primer Casa S.A.',
-    text: `Participá del sorteo — contacto por ${red}`,
-    url,
-  };
-
+async function abrirCompartir(url: string) {
+  // Solo la URL: si se pasa text/title aparte, el móvil ignora el ?text= de wa.me.
   if (typeof navigator.share === 'function') {
     try {
-      await navigator.share(shareData);
+      await navigator.share({ url });
       return;
     } catch (err) {
       if (err instanceof Error && err.name === 'AbortError') return;
@@ -50,7 +45,7 @@ function CompartirButton({ url, label, icon }: CompartirButtonProps) {
   return (
     <button
       type="button"
-      onClick={() => void abrirCompartir(url, label)}
+      onClick={() => void abrirCompartir(url)}
       style={{ touchAction: 'manipulation' }}
       className={`flex h-12 flex-1 items-center justify-center gap-2.5 rounded-xl border text-[14px] font-semibold text-white transition-all active:scale-[0.98] ${
         esIg

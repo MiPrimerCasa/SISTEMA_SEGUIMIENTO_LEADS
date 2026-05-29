@@ -3,6 +3,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { esCodigoUsuarioCargaValido } from './codigo-promotor.js';
 import { normalizeNombre, resolveCodigoCargaPorPromotor } from './encuestas.js';
+import { compactarCodigoSorteo } from './whatsapp-link-text.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 let catalogCache = null;
@@ -12,10 +13,7 @@ export function normalizeLoginId(valor) {
 }
 
 export function normalizeCodigoCatalog(valor) {
-  return String(valor ?? '')
-    .trim()
-    .toUpperCase()
-    .replace(/\s+/g, '');
+  return compactarCodigoSorteo(valor);
 }
 
 /** Coincidencia flexible: planilla «Leonel C» ↔ SP «LEONEL CAJAL» / «STRAUSS LEONEL». */

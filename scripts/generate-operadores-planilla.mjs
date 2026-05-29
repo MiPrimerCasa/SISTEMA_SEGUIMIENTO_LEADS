@@ -11,6 +11,10 @@
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import {
+  buildWaMeUrl,
+  compactarCodigoSorteo,
+} from '../server/db/whatsapp-link-text.js';
 
 const WA_PHONE = '5493705229067';
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -30,10 +34,7 @@ function normalizeLoginId(valor) {
 }
 
 function normalizeCodigo(valor) {
-  return String(valor ?? '')
-    .trim()
-    .toUpperCase()
-    .replace(/\s+/g, '');
+  return compactarCodigoSorteo(valor);
 }
 
 function inferRol(codigo, rolCsv) {
@@ -120,8 +121,8 @@ for (const row of rows) {
     vendedor,
     codigo: row.codigo,
     rol,
-    instagram: buildWaUrl(row.codigo, 'instagram'),
-    facebook: buildWaUrl(row.codigo, 'facebook'),
+    instagram: buildWaMeUrl(WA_PHONE, row.codigo, 'instagram'),
+    facebook: buildWaMeUrl(WA_PHONE, row.codigo, 'facebook'),
   };
 
   const meta = { codigo: row.codigo, vendedor, rol };
