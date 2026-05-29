@@ -6,6 +6,8 @@ import {
   esTerreno,
   opcionesPagoPlanInversion,
   opcionesPagoTerreno,
+  etiquetaNumeroDocumentoVenta,
+  mensajeErrorNumeroDocumentoVenta,
   requiereNumeroRecibo,
   resetCamposAlCambiarProducto,
   resetCamposVenta,
@@ -203,7 +205,7 @@ export function LeadModalForm({
         return;
       }
       if (requiereNumeroRecibo(form.idProducto, form.estadoPago) && !form.numeroRecibo.trim()) {
-        setErrorVenta('Ingresá el número del comprobante.');
+        setErrorVenta(mensajeErrorNumeroDocumentoVenta(rol));
         return;
       }
     }
@@ -612,7 +614,7 @@ export function LeadModalForm({
                       {muestraRecibo && (
                         <div className="space-y-1.5">
                           <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-brand-700">
-                            Número del comprobante
+                            {etiquetaNumeroDocumentoVenta(rol)}
                           </p>
                           <input
                             type="text"

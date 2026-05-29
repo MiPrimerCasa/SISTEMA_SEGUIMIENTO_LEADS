@@ -5,9 +5,9 @@ import {
   leadEnEntrevistaPendiente,
   leadReagendaEntrevista,
 } from '../../domain/leads';
-import { etiquetaPagoProducto } from '../../domain/venta';
+import { etiquetaCortaNumeroDocumentoVenta, etiquetaPagoProducto } from '../../domain/venta';
 import { FUENTE_LABEL } from '../../domain/fuenteLabels';
-import type { Barrio, Lead, Producto, Promotor } from '../../types';
+import type { Barrio, Lead, Producto, Promotor, RolUsuario } from '../../types';
 import { EntrevistaAgendaBadge } from './EntrevistaAgendaBadge';
 import { StatusPill } from '../ui/StatusPill';
 import { WhatsAppLeadButton } from './WhatsAppLeadButton';
@@ -22,6 +22,7 @@ interface LeadCardProps {
   nombreUsuario?: string;
   /** En vista promotor no mostramos la fila Promotor (siempre es el usuario logueado). */
   ocultarPromotor?: boolean;
+  rolUsuario?: RolUsuario;
 }
 
 export function LeadCard({
@@ -33,6 +34,7 @@ export function LeadCard({
   barrios = [],
   nombreUsuario,
   ocultarPromotor = false,
+  rolUsuario = 'supervisor',
 }: LeadCardProps) {
   const compro = leadCompro(lead);
   const reagenda = leadReagendaEntrevista(lead);
@@ -128,7 +130,8 @@ export function LeadCard({
             {detallePago && <span className="ml-1 text-zinc-400">· {detallePago}</span>}
             {lead.seguimiento?.numeroRecibo && (
               <span className="ml-1 text-zinc-400">
-                · Comprobante: {lead.seguimiento.numeroRecibo}
+                · {etiquetaCortaNumeroDocumentoVenta(rolUsuario)}:{' '}
+                {lead.seguimiento.numeroRecibo}
               </span>
             )}
           </div>

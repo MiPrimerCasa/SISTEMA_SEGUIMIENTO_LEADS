@@ -1,4 +1,4 @@
-import type { Barrio, EstadoPago } from '../types';
+import type { Barrio, EstadoPago, RolUsuario } from '../types';
 
 export const ID_PRODUCTO_PIJ = 'prod-pij';
 export const ID_PRODUCTO_TERRENO = 'prod-terreno';
@@ -37,6 +37,21 @@ export function opcionesPagoTerreno(): OpcionPago[] {
     { value: 'sena', label: 'Seña' },
     { value: 'cien', label: '100%' },
   ];
+}
+
+/** Supervisor: recibo; promotor: comprobante (mismo campo `numeroRecibo` en API). */
+export function etiquetaNumeroDocumentoVenta(rol: RolUsuario): string {
+  return rol === 'supervisor' ? 'Número de recibo' : 'Número de comprobante';
+}
+
+export function etiquetaCortaNumeroDocumentoVenta(rol: RolUsuario): string {
+  return rol === 'supervisor' ? 'Recibo' : 'Comprobante';
+}
+
+export function mensajeErrorNumeroDocumentoVenta(rol: RolUsuario): string {
+  return rol === 'supervisor'
+    ? 'Ingresá el número de recibo.'
+    : 'Ingresá el número de comprobante.';
 }
 
 export function requiereNumeroRecibo(

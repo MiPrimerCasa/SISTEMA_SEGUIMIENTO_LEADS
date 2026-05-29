@@ -227,6 +227,7 @@ export function LeadsPanel({
                     barrios={barrios}
                     nombreUsuario={nombreUsuario}
                     ocultarPromotor
+                    rolUsuario={rolUsuario}
                     onQuickSave={onActualizarLead}
                   />
                 ) : (
@@ -240,6 +241,7 @@ export function LeadsPanel({
                     barrios={barrios}
                     nombreUsuario={nombreUsuario}
                     ocultarPromotor={esPromotor}
+                    rolUsuario={rolUsuario}
                   />
                 );
               })}
@@ -324,6 +326,7 @@ export function LeadsPanel({
                     barrios={barrios}
                     nombreUsuario={nombreUsuario}
                     ocultarPromotor
+                    rolUsuario={rolUsuario}
                     onQuickSave={onActualizarLead}
                   />
                 ) : (
@@ -337,6 +340,7 @@ export function LeadsPanel({
                     barrios={barrios}
                     nombreUsuario={nombreUsuario}
                     ocultarPromotor={esPromotor}
+                    rolUsuario={rolUsuario}
                   />
                 ),
               )}
@@ -366,6 +370,7 @@ export function LeadsPanel({
                 barrios={barrios}
                 nombreUsuario={nombreUsuario}
                 ocultarPromotor={esPromotor}
+                rolUsuario={rolUsuario}
               />
             ))}
           </div>
