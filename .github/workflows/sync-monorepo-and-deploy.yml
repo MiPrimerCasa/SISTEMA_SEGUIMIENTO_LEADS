@@ -1,7 +1,7 @@
 # Sync SISTEMA_SEGUIMIENTO_LEADS → encuesta-sorteo/leads/ → deploy VPS
 #
 # Secrets (Settings → Actions):
-#   MONOREPO_PUSH_TOKEN — PAT con write en MiPrimerCasa/encuesta-sorteo
+#   MONOREPO_PUSH_TOKEN — PAT fine-grained: Contents + Workflows (write) en encuesta-sorteo
 #   VPS_HOST, VPS_USER, VPS_SSH_KEY
 
 name: Sync monorepo y deploy producción
