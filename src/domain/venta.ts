@@ -22,7 +22,7 @@ export type OpcionPago = { value: EstadoPago; label: string; hint?: string };
 
 export function opcionesPagoPlanInversion(): OpcionPago[] {
   return [
-    { value: 'sena', label: 'Seña' },
+    { value: 'sena', label: 'Operaciones en Seña' },
     {
       value: 'entrega_33',
       label: 'Entrega $33.000',
@@ -34,9 +34,40 @@ export function opcionesPagoPlanInversion(): OpcionPago[] {
 
 export function opcionesPagoTerreno(): OpcionPago[] {
   return [
-    { value: 'sena', label: 'Seña' },
-    { value: 'cien', label: '100%' },
+    { value: 'sena', label: 'Operaciones en Seña' },
+    { value: 'cien', label: 'Cobrado 100%' },
   ];
+}
+
+export function opcionesPagoParaRol(
+  _rol: RolUsuario,
+  idProducto: string | null | undefined,
+): OpcionPago[] {
+  if (esTerreno(idProducto)) {
+    return opcionesPagoTerreno();
+  }
+  if (esPlanInversion(idProducto)) {
+    return opcionesPagoPlanInversion();
+  }
+  return [];
+}
+
+export function etiquetasResultadoEntrevista(_rol?: RolUsuario) {
+  return { compro: 'SI COMPRO', noCompro: 'NO COMPRO' };
+}
+
+export function etiquetaEstadoPagoVisible(
+  _rol: RolUsuario | undefined,
+  estadoPago: EstadoPago,
+  _idProducto?: string | null,
+) {
+  if (estadoPago === 'sena') return 'Operaciones en Seña';
+  if (estadoPago === 'cien') return 'Cobrado 100%';
+  return ETIQUETA_ESTADO_PAGO[estadoPago] ?? estadoPago;
+}
+
+export function tituloEstadoCompra(_rol?: RolUsuario) {
+  return 'Estado de compra';
 }
 
 /** Supervisor: recibo; promotor: comprobante (mismo campo `numeroRecibo` en API). */
@@ -77,9 +108,10 @@ export function etiquetaPagoProducto(
   estadoPago: EstadoPago | null | undefined,
   barrios: Barrio[],
   idBarrio?: string | null,
+  rol?: RolUsuario,
 ) {
   if (!estadoPago) return null;
-  const pago = ETIQUETA_ESTADO_PAGO[estadoPago] ?? estadoPago;
+  const pago = etiquetaEstadoPagoVisible(rol ?? 'promotor', estadoPago, idProducto);
   if (esTerreno(idProducto) && idBarrio) {
     const barrio = getBarrioNombre(idBarrio, barrios);
     return barrio ? `${pago} · ${barrio}` : pago;

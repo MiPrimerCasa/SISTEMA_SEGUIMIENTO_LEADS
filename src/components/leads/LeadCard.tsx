@@ -44,6 +44,7 @@ export function LeadCard({
     lead.seguimiento?.estadoPago,
     barrios,
     lead.seguimiento?.idBarrio,
+    rolUsuario,
   );
   const tieneSeguimiento = Boolean(
     lead.seguimiento?.canal || lead.seguimiento?.huboEntrevista != null,
@@ -90,7 +91,7 @@ export function LeadCard({
               <StatusPill variant="contactado" dot>Contactado</StatusPill>
             )}
             {!esArchivo && !esSeguimiento && !tieneSeguimiento && !reagenda && (
-              <StatusPill variant="nuevo" dot>Nuevo</StatusPill>
+              <StatusPill variant="nuevo" dot>No contactado</StatusPill>
             )}
           </div>
         </div>

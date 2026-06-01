@@ -91,14 +91,18 @@ export function LinksRedesSection({ className = 'mb-5' }: LinksRedesSectionProps
       .then((data) => {
         if (activo) setLinks(data);
       })
-      .catch(() => {
+      .catch((err: unknown) => {
         if (activo) {
+          const detalle =
+            err instanceof Error && err.message.trim()
+              ? err.message.trim()
+              : 'No se pudieron cargar los links. Reintentá en unos segundos.';
           setLinks({
             codigo: usuario.codigoCarga ?? null,
             vendedor: usuario.nombre,
             instagram: null,
             facebook: null,
-            mensaje: 'No se pudieron cargar los links. Reintentá en unos segundos.',
+            mensaje: detalle,
           });
         }
       })
