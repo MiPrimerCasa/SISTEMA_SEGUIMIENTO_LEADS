@@ -656,6 +656,17 @@ export async function updateLeadSeguimientoEncuesta(leadId, seguimiento, usuario
   const prevSeg = useSeguimientoSql()
     ? await getLatestSeguimientoSql(leadId, Number.isFinite(idOperador) ? idOperador : null)
     : getSeguimientoExterno(leadId);
+  if (
+    usuario?.rol === 'promotor' &&
+    prevSeg?.resultadoEntrevista === 'compro' &&
+    prevSeg?.operadorRol === 'supervisor'
+  ) {
+    const err = new Error(
+      'Este cierre fue registrado por el supervisor y no puede modificarse desde tu cuenta.',
+    );
+    err.code = 'CIERRE_SUPERVISOR_SOLO_LECTURA';
+    throw err;
+  }
   const base = mapEncuestaRowToLead(row, { [leadId]: prevSeg });
   const { merged, saved, entradaHistorial } = await persistirSeguimientoLead(
     leadId,
@@ -663,6 +674,16 @@ export async function updateLeadSeguimientoEncuesta(leadId, seguimiento, usuario
     usuario,
     base,
   );
-  const lead = applyDerivacionTerrenoAlLead({ ...base, seguimiento: merged }, merged);
+  const seguimientoConOperador = saved
+    ? {
+        ...merged,
+        operadorRol: usuario?.rol ?? merged.operadorRol ?? null,
+        operadorNombre: usuario?.nombre ?? merged.operadorNombre ?? null,
+      }
+    : merged;
+  const lead = applyDerivacionTerrenoAlLead(
+    { ...base, seguimiento: seguimientoConOperador },
+    seguimientoConOperador,
+  );
   return { lead, saved, entradaHistorial };
 }

@@ -1,4 +1,12 @@
-import type { Lead, LugarEntrevista, Producto, Promotor, RolUsuario, SeguimientoLead } from '../types';
+import type {
+  Lead,
+  LugarEntrevista,
+  Producto,
+  Promotor,
+  RolUsuario,
+  SeguimientoHistorialEntry,
+  SeguimientoLead,
+} from '../types';
 
 /** Lista única de promotores a partir de los leads ya cargados (evita 2.º SP en supervisor). */
 export function buildPromotoresFromLeads(leads: Lead[]): Promotor[] {
@@ -33,6 +41,26 @@ export function leadSeguimientoPijPromotor(lead: Lead) {
 
 export function leadSoloLecturaSupervisor(lead: Lead) {
   return leadSeguimientoPijPromotor(lead);
+}
+
+export const ETIQUETA_CIERRE_SUPERVISOR = 'Cierre registrado por supervisor';
+
+/** Cierre «Compró» cargado por el supervisor (promotor solo consulta). */
+export function leadCierreRegistradoSupervisor(
+  lead: Lead,
+  historial: SeguimientoHistorialEntry[] = [],
+) {
+  if (!leadCompro(lead)) return false;
+  if (lead.seguimiento?.operadorRol === 'supervisor') return true;
+  const ultimo = historial[0];
+  return ultimo?.resultadoEntrevista === 'compro' && ultimo.operadorRol === 'supervisor';
+}
+
+export function leadSoloLecturaPromotor(
+  lead: Lead,
+  historial: SeguimientoHistorialEntry[] = [],
+) {
+  return leadCierreRegistradoSupervisor(lead, historial);
 }
 
 export function leadDerivaSupervisorTerreno(lead: Lead) {
