@@ -19,8 +19,6 @@ import {
   resolveCodigoCargaPromotorStrict,
 } from './operadores-catalog.js';
 import { getSqlPoolEncuestas } from './mssql.js';
-import sql from 'mssql';
-import { listLeadsFromEncuestas } from './encuestas.js';
 
 const MSG_CONTACTO_YA_REGISTRADO = 'Este contacto ya está registrado.';
 
