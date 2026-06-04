@@ -10,6 +10,7 @@ import {
   mapOperadorVendedorToRol,
   parseIdEntero,
 } from './mssql.js';
+import { cierreRegistradoPorSupervisor } from '../domain/cierre-supervisor.js';
 import { getSeguimientoExterno } from './sqlite.js';
 import {
   batchLatestSeguimientoSql,
@@ -656,11 +657,7 @@ export async function updateLeadSeguimientoEncuesta(leadId, seguimiento, usuario
   const prevSeg = useSeguimientoSql()
     ? await getLatestSeguimientoSql(leadId, Number.isFinite(idOperador) ? idOperador : null)
     : getSeguimientoExterno(leadId);
-  if (
-    usuario?.rol === 'promotor' &&
-    prevSeg?.resultadoEntrevista === 'compro' &&
-    prevSeg?.operadorRol === 'supervisor'
-  ) {
+  if (usuario?.rol === 'promotor' && cierreRegistradoPorSupervisor(prevSeg)) {
     const err = new Error(
       'Este cierre fue registrado por el supervisor y no puede modificarse desde tu cuenta.',
     );
