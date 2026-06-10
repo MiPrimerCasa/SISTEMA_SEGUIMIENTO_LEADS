@@ -18,6 +18,9 @@ src/.env
 .env.local
 dist-ssr
 *.local
+__pycache__/
+*.pyc
+~$*.docx
 
 # Editor directories and files
 .vscode/*
