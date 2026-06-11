@@ -14,6 +14,7 @@ login_id,id_operador,nombre_operador,nombre_planilla,rol,codigo_carga
 ,,,PROMOTOR 05P01,promotor,SORTEO01S05P01
 ,,,Catherine Contreras,supervisor,SORTEO01S0600
 ,,,PROMOTOR 06P01,promotor,SORTEO01S06P01
+,,Sara FP,Sara FP,promotor,SORTEO01S06P02
 ,,,Cecilia Fernandez,supervisor,SORTEO01S0700
 ,,,PROMOTOR 07P01,promotor,SORTEO01S07P01
 ,,,Tania García,supervisor,SORTEO01S0800
