@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import type { AdminDashboardData, RankingAdminEntry, PersonaPijCierres } from '../../types';
 import { formatRangoSemana } from '../../domain/admin-metrics';
 import { AdminConocimientoEncuesta } from './AdminConocimientoEncuesta';
@@ -88,27 +88,6 @@ export function SuperadminDashboard({ data }: SuperadminDashboardProps) {
   const [selectedPerson, setSelectedPerson] = useState<PersonaPijCierres | null>(null);
   const [filterText, setFilterText] = useState('');
   const [busquedaGlobal, setBusquedaGlobal] = useState('');
-  const [fechaSeleccionada, setFechaSeleccionada] = useState<string>(
-    () => (data.leadsPorDia?.[0]?.fecha ?? data.hoy?.slice(0, 10) ?? new Date().toISOString().slice(0, 10))
-  );
-
-  const diaSeleccionado = useMemo(
-    () => data.leadsPorDia?.find((d) => d.fecha === fechaSeleccionada) ?? null,
-    [data.leadsPorDia, fechaSeleccionada]
-  );
-
-  const fechasDisponibles = useMemo(
-    () => new Set((data.leadsPorDia ?? []).map((d) => d.fecha)),
-    [data.leadsPorDia]
-  );
-
-  function navFecha(delta: number) {
-    const sorted = (data.leadsPorDia ?? []).map((d) => d.fecha).sort();
-    const idx = sorted.indexOf(fechaSeleccionada);
-    if (idx === -1) return;
-    const next = sorted[idx + delta];
-    if (next) setFechaSeleccionada(next);
-  }
 
   const rango = formatRangoSemana(data.semanaDesde, data.semanaHasta);
   const hoyLabel = new Date(data.hoy).toLocaleDateString('es-AR', {
