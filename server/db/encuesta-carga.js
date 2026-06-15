@@ -156,6 +156,10 @@ function mapLugarEntrevistaSp(lugar) {
   return null;
 }
 
+export function digitsTelefono(raw) {
+  return String(raw ?? '').replace(/\D/g, '');
+}
+
 export function telefonosCoinciden(tel1, tel2) {
   const d1 = digitsTelefono(tel1);
   const d2 = digitsTelefono(tel2);
@@ -169,8 +173,6 @@ export function telefonosCoinciden(tel1, tel2) {
   }
   return false;
 }
-
-export { digitsTelefono };
 
 /**
  * Clave única encuesta: @telefono + @encuesta.
