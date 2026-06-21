@@ -34,3 +34,7 @@ __pycache__/
 *.njsproj
 *.sln
 *.sw?
+
+# Backups y bases de datos locales
+server/data/app-cache.db
+data/backups/
