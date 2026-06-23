@@ -38,3 +38,9 @@ __pycache__/
 # Backups y bases de datos locales
 server/data/app-cache.db
 data/backups/
+
+# Archivos de datos temporales y scratch
+data/*.xlsx
+data/*.json
+scratch/
+
