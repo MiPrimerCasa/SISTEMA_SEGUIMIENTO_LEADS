@@ -543,7 +543,7 @@ export function buildAdminDashboardFromLeads(
     const esCierre = lead.seguimiento?.resultadoEntrevista === 'compro';
     if (esCierre) {
       const fechaCierre = parseFecha(
-        lead.seguimiento?.fechaCierre ?? lead.seguimiento?.creadoEn ?? lead.seguimiento?.creado_en,
+        lead.seguimiento?.fechaCierre ?? lead.seguimiento?.creadoEn,
       );
       if (fechaCierre) {
         const cierreEnSemana = enRango(fechaCierre, desde, hasta);
@@ -590,7 +590,7 @@ export function buildAdminDashboardFromLeads(
 
     const comprasAdicionales = lead.seguimiento?.comprasAdicionales ?? [];
     for (const compra of comprasAdicionales) {
-      const fechaC = parseFecha(compra.fechaCierre ?? compra.creadoEn ?? compra.creado_en);
+      const fechaC = parseFecha(compra.fechaCierre);
       if (fechaC) {
         const cierreEnSemana = enRango(fechaC, desde, hasta);
         const cierreEsHoy = esMismoDia(fechaC, hoy);
