@@ -21,6 +21,69 @@
   --font-sans: 'Inter', system-ui, Roboto, 'Helvetica Neue', sans-serif;
 }
 
+/* ── Dark mode (class-based) ──────────────────────────────────────────────── */
+@custom-variant dark (&:where(.dark, .dark *));
+
+html.dark { color-scheme: dark; }
+
+/* Fondos */
+html.dark .bg-white                              { background-color: #18181b; }
+html.dark .bg-zinc-50                            { background-color: #09090b; }
+html.dark .bg-zinc-100                           { background-color: #27272a; }
+html.dark .bg-zinc-800                           { background-color: #09090b; }
+
+/* Fondos semánticos */
+html.dark .bg-ok-subtle                          { background-color: #0a1c11; }
+html.dark .bg-amber-50                           { background-color: #1a1306; }
+html.dark .bg-indigo-50                          { background-color: #0e0e20; }
+html.dark .bg-brand-50                           { background-color: #1a080a; }
+html.dark .bg-brand-100                          { background-color: #2a0d10; }
+html.dark .bg-red-50                             { background-color: #1a0808; }
+html.dark .bg-teal-50                            { background-color: #061616; }
+html.dark .bg-blue-50                            { background-color: #080e1a; }
+html.dark .bg-emerald-100                        { background-color: #0d2010; }
+html.dark .bg-blue-100                           { background-color: #0d1020; }
+
+/* Bordes */
+html.dark .border-zinc-200                       { border-color: #3f3f46; }
+html.dark .border-zinc-100                       { border-color: #27272a; }
+html.dark .border-amber-200                      { border-color: #4a3012; }
+html.dark .border-indigo-200                     { border-color: #1e1e42; }
+html.dark .border-brand-200                      { border-color: #4a1215; }
+html.dark .border-brand-100                      { border-color: #2e0e10; }
+html.dark .border-red-200                        { border-color: #5a1010; }
+html.dark .border-teal-200                       { border-color: #0e3434; }
+html.dark .border-ok\/30                         { border-color: rgba(21,128,61,.25); }
+
+/* Texto — los grises oscuros se vuelven claros */
+html.dark .text-zinc-900                         { color: #f4f4f5; }
+html.dark .text-zinc-800                         { color: #e4e4e7; }
+html.dark .text-zinc-700                         { color: #d4d4d8; }
+html.dark .text-zinc-600                         { color: #a1a1aa; }
+html.dark .text-zinc-500                         { color: #a1a1aa; }
+html.dark .text-zinc-400                         { color: #d4d4d8; }
+
+/* Texto semántico */
+html.dark .text-blue-700                         { color: #93c5fd; }
+html.dark .text-emerald-700                      { color: #6ee7b7; }
+
+/* Divisores */
+html.dark .divide-zinc-100 > :not([hidden]) ~ :not([hidden]) { border-color: #27272a; }
+
+/* Inputs y textareas */
+html.dark input, html.dark textarea, html.dark select {
+  background-color: #27272a;
+  color: #f4f4f5;
+  border-color: #3f3f46;
+}
+html.dark input::placeholder, html.dark textarea::placeholder { color: #71717a; }
+
+/* Hover states */
+html.dark .hover\:bg-zinc-50:hover              { background-color: #27272a; }
+html.dark .hover\:bg-white:hover                { background-color: #27272a; }
+html.dark .hover\:bg-zinc-100:hover             { background-color: #3f3f46; }
+html.dark .hover\:border-zinc-300:hover         { border-color: #52525b; }
+
 /* Eliminar highlight azul iOS — el feedback lo da :active en cada componente */
 * {
   -webkit-tap-highlight-color: transparent;

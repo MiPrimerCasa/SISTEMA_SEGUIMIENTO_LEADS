@@ -1,5 +1,5 @@
-export type RolUsuario = 'promotor' | 'supervisor' | 'superadmin';
-export type VistaActiva = 'leads' | 'promotores' | 'metricas' | 'calendario' | 'admin';
+export type RolUsuario = 'promotor' | 'supervisor' | 'superadmin' | 'manager';
+export type VistaActiva = 'leads' | 'promotores' | 'metricas' | 'calendario' | 'admin' | 'despacho' | 'handler' | 'entrevistas';
 export type ListaLead = 'entrevista' | 'contacto';
 /** Dónde quiere la entrevista el cliente (encuesta / SP). */
 export type LugarEntrevista = 'sucursal' | 'domicilio';

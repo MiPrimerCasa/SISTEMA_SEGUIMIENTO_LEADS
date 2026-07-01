@@ -22,6 +22,7 @@ import {
   DEMO_USUARIO,
   DEMO_USUARIO_PROMOTOR,
   DEMO_USUARIO_SUPERADMIN,
+  DEMO_USUARIO_MANAGER,
   createDemoLead,
   getDemoAdminDashboard,
   getDemoLeads,
@@ -36,14 +37,16 @@ import {
 } from './demoData';
 
 let _isDemoActive = import.meta.env.VITE_DEMO === 'true';
-export function enableDemoMode(rol: 'supervisor' | 'promotor' | 'superadmin' = 'supervisor') {
+export function enableDemoMode(rol: 'supervisor' | 'promotor' | 'superadmin' | 'manager' = 'supervisor') {
   _isDemoActive = true;
   _demoUsuario =
     rol === 'promotor'
       ? DEMO_USUARIO_PROMOTOR
       : rol === 'superadmin'
         ? DEMO_USUARIO_SUPERADMIN
-        : DEMO_USUARIO;
+        : rol === 'manager'
+          ? DEMO_USUARIO_MANAGER
+          : DEMO_USUARIO;
 }
 
 const STORAGE_KEY = 'mpc-crm-session';
@@ -172,6 +175,8 @@ export async function login(usuario: string, password: string) {
       _demoUsuario = DEMO_USUARIO_PROMOTOR;
     } else if (usuario === '__demo_superadmin__') {
       _demoUsuario = DEMO_USUARIO_SUPERADMIN;
+    } else if (usuario === '__demo_manager__') {
+      _demoUsuario = DEMO_USUARIO_MANAGER;
     } else {
       _demoUsuario = DEMO_USUARIO;
     }

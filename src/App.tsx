@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import {
   crearLead,
   modificarTelefonoLead,
@@ -42,6 +42,21 @@ const SuperadminDashboard = lazy(() =>
     default: m.SuperadminDashboard,
   })),
 );
+const PanelDespacho = lazy(() =>
+  import('./components/despacho/PanelDespacho').then((m) => ({
+    default: m.PanelDespacho,
+  })),
+);
+const HandlerLeads = lazy(() =>
+  import('./components/despacho/HandlerLeads').then((m) => ({
+    default: m.HandlerLeads,
+  })),
+);
+const EntrevistasPanel = lazy(() =>
+  import('./components/despacho/EntrevistasPanel').then((m) => ({
+    default: m.EntrevistasPanel,
+  })),
+);
 
 function VistaCargando({ texto = 'Cargando…' }: { texto?: string }) {
   return <p className="px-4 py-12 text-center text-neutral-600">{texto}</p>;
@@ -50,8 +65,21 @@ function VistaCargando({ texto = 'Cargando…' }: { texto?: string }) {
 function AppShell() {
   const { usuario, login, logout } = useAuth();
   const esSuperadmin = usuario?.rol === 'superadmin';
-  const tienePanelGlobal = !esSuperadmin && Boolean(usuario?.panelGlobal);
-  const [vistaActiva, setVistaActiva] = useState<VistaActiva>(esSuperadmin ? 'admin' : 'leads');
+
+  // ── Dark mode ─────────────────────────────────────────────────────────
+  const [isDark, setIsDark] = useState(() => localStorage.getItem('mpc-theme') === 'dark');
+  const darkInitialized = useRef(false);
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', isDark);
+    if (darkInitialized.current) localStorage.setItem('mpc-theme', isDark ? 'dark' : 'light');
+    darkInitialized.current = true;
+  }, [isDark]);
+  const toggleDark = useCallback(() => setIsDark((d) => !d), []);
+  const esManager = usuario?.rol === 'manager';
+  const tienePanelGlobal = !esSuperadmin && !esManager && Boolean(usuario?.panelGlobal);
+  const [vistaActiva, setVistaActiva] = useState<VistaActiva>(
+    esSuperadmin ? 'admin' : esManager ? 'despacho' : 'leads',
+  );
   const [leadIdSeguimiento, setLeadIdSeguimiento] = useState<string | null>(null);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [adminDashboard, setAdminDashboard] = useState<AdminDashboardData | null>(null);
@@ -66,6 +94,23 @@ function AppShell() {
 
   const cargarDatos = useCallback(async (p = periodo) => {
     if (!usuario) return;
+    if (usuario.rol === 'manager') {
+      setCargando(true);
+      setError('');
+      try {
+        const [dash, leadsRes] = await Promise.all([
+          fetchAdminDashboard(p),
+          fetchLeads(),
+        ]);
+        setAdminDashboard(dash);
+        setLeads(leadsRes.leads);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Error al cargar datos del despacho');
+      } finally {
+        setCargando(false);
+      }
+      return;
+    }
     setCargando(true);
     setError('');
     try {
@@ -164,7 +209,17 @@ function AppShell() {
   }
 
   const contenidoPrincipal =
-    cargando && !adminDashboard && leads.length === 0 ? (
+    esManager ? (
+      vistaActiva === 'handler' ? (
+        <HandlerLeads />
+      ) : vistaActiva === 'entrevistas' ? (
+        <EntrevistasPanel />
+      ) : cargando && !adminDashboard ? (
+        <VistaCargando texto="Cargando datos del despacho…" />
+      ) : (
+        <PanelDespacho leads={leads} adminDashboard={adminDashboard} />
+      )
+    ) : cargando && !adminDashboard && leads.length === 0 ? (
       <VistaCargando texto="Cargando datos…" />
     ) : esSuperadmin && adminDashboard ? (
       <SuperadminDashboard data={adminDashboard} periodo={periodo} onCambiarPeriodo={cambiarPeriodo} />
@@ -208,12 +263,14 @@ function AppShell() {
     );
 
   return (
-    <div vaul-drawer-wrapper="" className="min-h-svh bg-zinc-50">
+    <div vaul-drawer-wrapper="" className="min-h-svh bg-zinc-50 dark:bg-zinc-950">
       <NavBar
         vistaActiva={vistaActiva}
         onCambiarVista={setVistaActiva}
         usuario={usuario}
         onLogout={logout}
+        isDark={isDark}
+        onToggleDark={toggleDark}
       />
       <main>
         {aviso && (

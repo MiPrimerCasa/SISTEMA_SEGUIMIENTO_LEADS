@@ -61,7 +61,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
     }
   };
 
-  const enterDemo = async (rol: '__demo_supervisor__' | '__demo_promotor__') => {
+  const enterDemo = async (rol: '__demo_supervisor__' | '__demo_promotor__' | '__demo_manager__') => {
     setCargando(rol);
     setError('');
     try {
@@ -137,6 +137,26 @@ export function LoginPage({ onLogin }: LoginPageProps) {
                 </p>
               </div>
               {cargando === '__demo_promotor__' && (
+                <span className="ml-auto text-[12px] text-zinc-400">Cargando…</span>
+              )}
+            </button>
+
+            <button
+              type="button"
+              disabled={cargando !== null}
+              onClick={() => enterDemo('__demo_manager__')}
+              className="flex w-full items-center gap-4 rounded-2xl border-2 border-brand/20 bg-brand-50 px-5 py-4 text-left transition-all hover:border-brand/40 hover:shadow-sm active:scale-[0.99] disabled:opacity-60"
+            >
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand-100 text-[22px]">
+                🎛️
+              </div>
+              <div className="min-w-0">
+                <p className="text-[15px] font-bold text-zinc-900">Demo Manager Leads</p>
+                <p className="mt-0.5 text-[12px] text-zinc-500">
+                  Panel de despacho — cola, equipo y reasignaciones
+                </p>
+              </div>
+              {cargando === '__demo_manager__' && (
                 <span className="ml-auto text-[12px] text-zinc-400">Cargando…</span>
               )}
             </button>

@@ -49,6 +49,12 @@ export const DEMO_USUARIO_SUPERADMIN: UsuarioSesion = {
   loginId: 'admin@demo.local',
 };
 
+export const DEMO_USUARIO_MANAGER: UsuarioSesion = {
+  id: 'demo-manager',
+  nombre: 'M. Operador',
+  rol: 'manager',
+};
+
 // ─── Catálogo ─────────────────────────────────────────────────────────────────
 
 export const DEMO_PROMOTORES: Promotor[] = [

@@ -8,6 +8,7 @@ interface AdminModificarLeadModalProps {
   open: boolean;
   onClose: () => void;
   onSave: (leadId: string, datos: ModificarDatosLeadPayload) => Promise<void>;
+  onReset?: () => Promise<void>;
 }
 
 const INPUT_CLASS =
@@ -70,6 +71,7 @@ export function AdminModificarLeadModal({
   open,
   onClose,
   onSave,
+  onReset,
 }: AdminModificarLeadModalProps) {
   const [nombre, setNombre] = useState('');
   const [telefono, setTelefono] = useState('');
@@ -83,6 +85,7 @@ export function AdminModificarLeadModal({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+  const [resetStep, setResetStep] = useState<'idle' | 'confirm' | 'pending'>('idle');
 
   useEffect(() => {
     if (open && lead) {
@@ -99,10 +102,24 @@ export function AdminModificarLeadModal({
       setError('');
       setSuccessMsg('');
       setSaving(false);
+      setResetStep('idle');
     }
   }, [open, lead]);
 
   if (!open || !lead) return null;
+
+  const handleReset = async () => {
+    if (!onReset) return;
+    setResetStep('pending');
+    try {
+      await onReset();
+      setSuccessMsg('Seguimiento limpiado correctamente.');
+      setResetStep('idle');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error al limpiar el seguimiento.');
+      setResetStep('idle');
+    }
+  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -361,7 +378,43 @@ export function AdminModificarLeadModal({
         </form>
 
         {/* Footer */}
-        <div className="flex shrink-0 items-center justify-end gap-3 border-t border-zinc-100 bg-zinc-50/60 px-6 py-4">
+        <div className="flex shrink-0 items-center gap-3 border-t border-zinc-100 bg-zinc-50/60 px-6 py-4">
+          {/* Botón clear — solo visible si se pasa onReset */}
+          {onReset && (
+            <div className="mr-auto">
+              {resetStep === 'idle' && (
+                <button
+                  type="button"
+                  onClick={() => setResetStep('confirm')}
+                  className="rounded-lg border border-red-200 px-3 py-2 text-[12px] font-semibold text-red-600 transition-all hover:bg-red-50 active:scale-[0.98]"
+                >
+                  Limpiar seguimiento
+                </button>
+              )}
+              {resetStep === 'confirm' && (
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] font-semibold text-red-700">¿Estás seguro?</span>
+                  <button
+                    type="button"
+                    onClick={handleReset}
+                    className="rounded-lg bg-red-600 px-3 py-1.5 text-[12px] font-semibold text-white transition-all hover:bg-red-700 active:scale-[0.98]"
+                  >
+                    Sí, limpiar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setResetStep('idle')}
+                    className="rounded-lg border border-zinc-200 px-3 py-1.5 text-[12px] font-semibold text-zinc-600 transition-all hover:bg-zinc-50"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              )}
+              {resetStep === 'pending' && (
+                <span className="text-[12px] font-semibold text-red-500">Limpiando…</span>
+              )}
+            </div>
+          )}
           <button
             type="button"
             onClick={onClose}
