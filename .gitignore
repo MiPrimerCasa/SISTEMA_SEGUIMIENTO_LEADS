@@ -46,3 +46,8 @@ data/*.xlsx
 data/*.json
 scratch/
 
+# Notas y docs locales (no versionar)
+docs/GUIA_DBA_INTEGRACION_SEGUIMIENTO_Y_NOTIFICACIONES.txt
+docs/REQUISITOS_GRABACIONES_IMPLEMENTADO_2026-06-27.txt
+docs/pendiente_jwt_seguridad.txt
+
