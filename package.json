@@ -10,6 +10,7 @@
     "dev": "concurrently -k -n api,web \"npm run dev:api\" \"vite\"",
     "dev:web": "vite",
     "demo": "vite --mode demo",
+    "demo:full": "concurrently -k -n api,web \"npm run start:api\" \"vite --mode demo\"",
     "dev:api": "node --env-file=src/.env server/index.js",
     "desarrollo": "npm run dev",
     "desarrollo:api": "npm run dev:api",

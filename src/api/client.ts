@@ -1,6 +1,7 @@
 import type {
   AdminDashboardData,
   Barrio,
+  EvaluacionAudioResponse,
   GrabacionesConfigResponse,
   GrabacionesCumplimientoResponse,
   GrabacionesMiasResponse,
@@ -735,6 +736,47 @@ export async function uploadGrabacion(
     xhr.onerror = () => reject(new Error('No se pudo subir. Reintentá cuando tengas señal.'));
     xhr.send(form);
   });
+}
+
+async function parseEvaluacionResponse(res: Response): Promise<EvaluacionAudioResponse> {
+  let data: Record<string, unknown> = {};
+  try {
+    data = res.status === 204 ? {} : await res.json();
+  } catch {
+    throw new Error('Respuesta inválida del servidor al evaluar el audio.');
+  }
+
+  if (!res.ok) {
+    const msg = typeof data.message === 'string' ? data.message : `Error al evaluar (${res.status})`;
+    const detail = typeof data.detail === 'string' && data.detail.trim() ? data.detail.trim() : null;
+    throw new Error(detail ? `${msg}\n\nRespuesta de n8n: ${detail}` : msg);
+  }
+
+  return data as unknown as EvaluacionAudioResponse;
+}
+
+/** Envía un audio recién elegido a nuestro backend, que lo reenvía a n8n server-to-server (evita CORS del webhook). */
+export async function evaluarAudioIA(archivo: File): Promise<EvaluacionAudioResponse> {
+  const form = new FormData();
+  form.append('audio', archivo, archivo.name);
+
+  const res = await fetch(apiUrl('/api/audio/evaluar'), {
+    method: 'POST',
+    headers: authHeadersForSession(false),
+    body: form,
+  });
+
+  return parseEvaluacionResponse(res);
+}
+
+/** Evalúa una grabación ya subida: el backend lee el archivo del almacén y lo reenvía a n8n. */
+export async function evaluarGrabacionExistenteIA(id: number): Promise<EvaluacionAudioResponse> {
+  const res = await fetch(apiUrl(`/api/grabaciones/${id}/evaluar`), {
+    method: 'POST',
+    headers: authHeadersForSession(false),
+  });
+
+  return parseEvaluacionResponse(res);
 }
 
 export async function fetchGrabacionesCumplimiento(

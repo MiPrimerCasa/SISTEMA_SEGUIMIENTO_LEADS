@@ -1,5 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { fetchMisGrabaciones, fetchGrabacionAudioBlob, uploadGrabacion } from '../../api/client';
+import {
+  fetchMisGrabaciones,
+  fetchGrabacionAudioBlob,
+  uploadGrabacion,
+  evaluarAudioIA,
+  evaluarGrabacionExistenteIA,
+} from '../../api/client';
 import type { GrabacionPromotor, Lead, ResumenGrabacionesDia, ResumenTopeGrabacionesMes, TipoGrabacion } from '../../types';
 
 interface GrabacionDiariaPanelProps {
@@ -116,6 +122,66 @@ const SPEECH_PROMOCION = [
   },
 ] as const;
 
+interface EstadoEvaluacionGuardada {
+  cargando: boolean;
+  evaluacion?: string;
+  transcripcion?: string;
+  error?: string;
+}
+
+function EvaluacionGrabacionGuardada({
+  estado,
+  onEvaluar,
+}: {
+  estado: EstadoEvaluacionGuardada | undefined;
+  onEvaluar: () => void;
+}) {
+  return (
+    <div className="mt-2 border-t border-zinc-100 pt-2">
+      <button
+        type="button"
+        disabled={estado?.cargando}
+        onClick={onEvaluar}
+        className="text-[12px] font-semibold text-brand-600 hover:text-brand-700 disabled:text-zinc-400"
+      >
+        {estado?.cargando
+          ? 'Transcribiendo… (puede tardar unos minutos)'
+          : 'Transcribir y evaluar con IA'}
+      </button>
+
+      {estado?.error && (
+        <p className="mt-1 whitespace-pre-wrap text-[12px] font-medium text-red-600">
+          {estado.error}
+        </p>
+      )}
+
+      {estado?.evaluacion && (
+        <div className="mt-2 rounded-lg border border-brand-100 bg-brand-50/40 p-3">
+          <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-brand-600">
+            Evaluación
+          </p>
+          <p className="text-[13px] leading-relaxed text-zinc-800" style={{ whiteSpace: 'pre-wrap' }}>
+            {estado.evaluacion}
+          </p>
+          {estado.transcripcion && (
+            <details className="mt-2">
+              <summary className="cursor-pointer select-none text-[12px] font-semibold text-zinc-500 hover:text-zinc-700">
+                Ver transcripción
+              </summary>
+              <p
+                className="mt-2 text-[13px] leading-relaxed text-zinc-600"
+                style={{ whiteSpace: 'pre-wrap' }}
+              >
+                {estado.transcripcion}
+              </p>
+            </details>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function ModalSpeechPromocion({ abierto, onCerrar }: { abierto: boolean; onCerrar: () => void }) {
   if (!abierto) return null;
 
@@ -177,6 +243,13 @@ export function GrabacionDiariaPanel({
   const [lista, setLista] = useState<GrabacionPromotor[]>([]);
   const [cargando, setCargando] = useState(true);
   const [speechAbierto, setSpeechAbierto] = useState(false);
+  const [evaluando, setEvaluando] = useState(false);
+  const [evaluacion, setEvaluacion] = useState<string | null>(null);
+  const [transcripcion, setTranscripcion] = useState<string | null>(null);
+  const [errorEvaluacion, setErrorEvaluacion] = useState<string | null>(null);
+  const [evaluacionesGuardadas, setEvaluacionesGuardadas] = useState<
+    Record<number, EstadoEvaluacionGuardada>
+  >({});
 
   const cargar = useCallback(async () => {
     setCargando(true);
@@ -270,6 +343,47 @@ export function GrabacionDiariaPanel({
     }
   };
 
+  const evaluarAudio = async () => {
+    if (!archivo) {
+      setErrorEvaluacion('Seleccioná un archivo de audio primero.');
+      return;
+    }
+    setEvaluando(true);
+    setErrorEvaluacion(null);
+    setEvaluacion(null);
+    setTranscripcion(null);
+    try {
+      const data = await evaluarAudioIA(archivo);
+      setEvaluacion(data.evaluacion);
+      setTranscripcion(data.transcripcion ?? null);
+    } catch (err) {
+      setErrorEvaluacion(
+        err instanceof Error ? err.message : 'No se pudo evaluar el audio. Intentá de nuevo.',
+      );
+    } finally {
+      setEvaluando(false);
+    }
+  };
+
+  const evaluarGrabacionGuardada = async (id: number) => {
+    setEvaluacionesGuardadas((prev) => ({ ...prev, [id]: { cargando: true } }));
+    try {
+      const data = await evaluarGrabacionExistenteIA(id);
+      setEvaluacionesGuardadas((prev) => ({
+        ...prev,
+        [id]: { cargando: false, evaluacion: data.evaluacion, transcripcion: data.transcripcion },
+      }));
+    } catch (err) {
+      setEvaluacionesGuardadas((prev) => ({
+        ...prev,
+        [id]: {
+          cargando: false,
+          error: err instanceof Error ? err.message : 'No se pudo evaluar el audio. Intentá de nuevo.',
+        },
+      }));
+    }
+  };
+
   return (
     <div className="mx-auto max-w-lg px-4 py-6 md:max-w-2xl md:px-6">
       <h2 className="text-[20px] font-semibold tracking-[-0.01em] text-zinc-900">Grabación diaria</h2>
@@ -311,7 +425,18 @@ export function GrabacionDiariaPanel({
             type="file"
             accept={formatos.join(',') + ',audio/*'}
             disabled={subiendo}
-            onChange={(e) => setArchivo(e.target.files?.[0] ?? null)}
+            onChange={(e) => {
+                const f = e.target.files?.[0] ?? null;
+                if (f && !f.type.startsWith('audio/')) {
+                  setErrorEvaluacion('El archivo seleccionado no es un audio válido.');
+                  e.target.value = '';
+                  return;
+                }
+                setArchivo(f);
+                setErrorEvaluacion(null);
+                setEvaluacion(null);
+                setTranscripcion(null);
+              }}
             className="block w-full text-[13px] text-zinc-600 file:mr-3 file:rounded-lg file:border-0 file:bg-brand-50 file:px-3 file:py-2 file:text-[13px] file:font-semibold file:text-brand-700"
           />
           <p className="mt-1 text-[11px] text-zinc-400">
@@ -399,6 +524,50 @@ export function GrabacionDiariaPanel({
         >
           {subiendo ? 'Subiendo…' : 'Subir audio'}
         </button>
+
+        <button
+          type="button"
+          disabled={!archivo || evaluando || subiendo}
+          onClick={() => void evaluarAudio()}
+          className="w-full rounded-xl border border-brand-600 py-3 text-[14px] font-semibold text-brand-700 transition-colors hover:bg-brand-50 disabled:cursor-not-allowed disabled:border-zinc-200 disabled:text-zinc-400"
+        >
+          {evaluando ? 'Procesando…' : 'Evaluar audio con IA'}
+        </button>
+
+        {errorEvaluacion && (
+          <p className="whitespace-pre-wrap rounded-lg bg-red-50 px-3 py-2 text-[13px] font-medium text-red-700">
+            {errorEvaluacion}
+          </p>
+        )}
+
+        {evaluacion && (
+          <div className="rounded-xl border border-brand-100 bg-brand-50/40 p-4 space-y-3">
+            <div>
+              <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-brand-600">
+                Evaluación
+              </p>
+              <p
+                className="text-[13px] leading-relaxed text-zinc-800"
+                style={{ whiteSpace: 'pre-wrap' }}
+              >
+                {evaluacion}
+              </p>
+            </div>
+            {transcripcion && (
+              <details>
+                <summary className="cursor-pointer select-none text-[12px] font-semibold text-zinc-500 hover:text-zinc-700">
+                  Ver transcripción
+                </summary>
+                <p
+                  className="mt-2 text-[13px] leading-relaxed text-zinc-600"
+                  style={{ whiteSpace: 'pre-wrap' }}
+                >
+                  {transcripcion}
+                </p>
+              </details>
+            )}
+          </div>
+        )}
       </section>
 
       <ModalSpeechPromocion abierto={speechAbierto} onCerrar={() => setSpeechAbierto(false)} />
@@ -436,6 +605,10 @@ export function GrabacionDiariaPanel({
                   {g.leadNombre ? `Lead: ${g.leadNombre}` : 'Sin lead asociado'}
                 </p>
                 <AudioPromotor grabacionId={g.id} />
+                <EvaluacionGrabacionGuardada
+                  estado={evaluacionesGuardadas[g.id]}
+                  onEvaluar={() => void evaluarGrabacionGuardada(g.id)}
+                />
                 {g.estado === 'pendiente' && (
                   <p className="mt-1 text-[12px] text-amber-700">
                     Pendiente de revisión del supervisor

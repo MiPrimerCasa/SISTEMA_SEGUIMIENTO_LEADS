@@ -66,6 +66,7 @@ import { getHealthInfo, respondIfNotConfigured } from './require-production.js';
 import { formatSqlError } from './sql-errors.js';
 import { loginSchema, seguimientoSchema } from './schemas/seguimiento.js';
 import { registerGrabacionesRoutes } from './routes/grabaciones-routes.js';
+import { registerAudioEvaluacionRoutes } from './routes/audio-evaluacion-routes.js';
 
 function usuarioDesdeRequest(req) {
   const rol = req.headers['x-usuario-rol'];
@@ -1108,6 +1109,7 @@ function registerApiRoutes(api) {
   });
 
   registerGrabacionesRoutes(api, { usuarioDesdeRequest });
+  registerAudioEvaluacionRoutes(api, { usuarioDesdeRequest });
 }
 
 function mountStaticAndSpa(app, distPath, basePath) {

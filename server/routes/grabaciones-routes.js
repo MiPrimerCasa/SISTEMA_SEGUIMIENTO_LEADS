@@ -1,4 +1,4 @@
-import { createReadStream, statSync, unlinkSync } from 'node:fs';
+import { createReadStream, readFileSync, statSync, unlinkSync } from 'node:fs';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { mkdirSync } from 'node:fs';
@@ -40,6 +40,7 @@ import {
   toRelativeStoragePath,
 } from '../domain/grabaciones-storage.js';
 import { esSuperadminUsuario, esSupervisorPanelGlobal } from '../db/superadmin-auth.js';
+import { forwardAudioBufferToN8n } from './audio-evaluacion-routes.js';
 
 function toGrabacionClient(grabacion) {
   if (!grabacion) return null;
@@ -373,6 +374,37 @@ export function registerGrabacionesRoutes(api, { usuarioDesdeRequest }) {
     res.setHeader('Content-Type', grabacion.mimeType || 'audio/mpeg');
     res.setHeader('Cache-Control', 'private, max-age=3600');
     createReadStream(resolved).pipe(res);
+  });
+
+  api.post('/grabaciones/:id/evaluar', async (req, res) => {
+    const usuario = usuarioDesdeRequest(req);
+    if (!usuario) return res.status(401).json({ message: 'No autenticado' });
+
+    const id = Number.parseInt(String(req.params.id), 10);
+    const grabacion = getGrabacionById(id);
+    if (!grabacion) return res.status(404).json({ message: 'Grabación no encontrada' });
+
+    const esDueno =
+      usuario.rol === 'promotor' &&
+      usuarioPromotorTieneGrabaciones(usuario) &&
+      String(grabacion.promotorId) === resolvePromotorIdGrabaciones(usuario);
+    if (!esDueno && !puedeAuditarGrabaciones(usuario)) {
+      return res.status(403).json({ message: 'Sin permiso' });
+    }
+
+    const resolved = resolveStoragePath(grabacion.storagePath);
+    if (!resolved) {
+      return res.status(404).json({ message: 'Archivo no encontrado en el servidor' });
+    }
+
+    const buffer = readFileSync(resolved);
+    const filename = path.basename(resolved);
+    const { status, body } = await forwardAudioBufferToN8n(
+      buffer,
+      filename,
+      grabacion.mimeType || 'audio/mpeg',
+    );
+    return res.status(status).json(body);
   });
 
   api.post('/grabaciones/:id/aprobar', (req, res) => {

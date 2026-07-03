@@ -637,3 +637,8 @@ export interface GrabacionesCumplimientoResponse {
   filas: FilaCumplimientoGrabaciones[];
   promotoresConfig: Array<{ id: string; nombre: string }>;
 }
+
+export interface EvaluacionAudioResponse {
+  evaluacion: string;
+  transcripcion?: string;
+}
