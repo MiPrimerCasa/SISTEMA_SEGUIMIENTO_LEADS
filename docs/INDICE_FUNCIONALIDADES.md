@@ -35,7 +35,7 @@ Cada cambio de negocio tiene su propio archivo en `docs/`, siguiendo la [plantil
 | Login y rol desde `Categoria` | [LOGIN_SP.md](./LOGIN_SP.md) | Ambos | `mssql.js`, `encuestas.js` |
 | Integración Adhesiones Facturación SP | [PROPUESTA_INTEGRACION_ADHESIONES.md](./PROPUESTA_INTEGRACION_ADHESIONES.md) | Promotor, supervisor, superadmin | `adhesionesPorVendedorGestion` SP |
 | Deploy y monorepo | [MONOREPO.md](./MONOREPO.md), [DEPLOY_VPS.md](./DEPLOY_VPS.md) | — | `deploy/` |
-| Evaluación de audio con IA (transcripción + feedback) | [FUNCIONALIDAD_EVALUACION_AUDIO_IA.md](./FUNCIONALIDAD_EVALUACION_AUDIO_IA.md) | Promotor, supervisor/auditor | `audio-evaluacion-routes.js`, `GrabacionDiariaPanel.tsx` |
+| Evaluación de audio con IA (transcripción + feedback, persistida) | [FUNCIONALIDAD_EVALUACION_AUDIO_IA.md](./FUNCIONALIDAD_EVALUACION_AUDIO_IA.md) | Promotor, supervisor/auditor | `audio-evaluacion-routes.js`, `grabaciones-store.js`, `GrabacionDiariaPanel.tsx`, `GrabacionesCumplimientoPanel.tsx` |
 
 
 ## Documentación transversal
