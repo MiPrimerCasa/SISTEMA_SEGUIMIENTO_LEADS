@@ -30,6 +30,8 @@ const GRABACIONES_DDL = `
       rechazado_por TEXT,
       rechazado_en TEXT,
       motivo_rechazo TEXT,
+      evaluacion_ia TEXT,
+      transcripcion_ia TEXT,
       creado_en TEXT NOT NULL DEFAULT (datetime('now'))
     );
     CREATE INDEX IF NOT EXISTS idx_grabaciones_promotor_dia
@@ -37,6 +39,21 @@ const GRABACIONES_DDL = `
     CREATE INDEX IF NOT EXISTS idx_grabaciones_dia
       ON promotor_grabaciones (dia_key, estado);
 `;
+
+/** Agrega columnas nuevas a bases ya existentes (no las recrea, a diferencia de migrateGrabacionesEstados). */
+function migrateGrabacionesEvaluacionIA() {
+  const db = getDb();
+  try {
+    db.exec(`ALTER TABLE promotor_grabaciones ADD COLUMN evaluacion_ia TEXT`);
+  } catch {
+    /* ya existe */
+  }
+  try {
+    db.exec(`ALTER TABLE promotor_grabaciones ADD COLUMN transcripcion_ia TEXT`);
+  } catch {
+    /* ya existe */
+  }
+}
 
 function migrateGrabacionesEstados() {
   const db = getDb();
@@ -84,6 +101,7 @@ function migrateGrabacionesEstados() {
 function initGrabacionesSchema() {
   getDb().exec(GRABACIONES_DDL);
   migrateGrabacionesEstados();
+  migrateGrabacionesEvaluacionIA();
 }
 
 let schemaReady = false;
@@ -114,6 +132,8 @@ function mapRow(row) {
     rechazadoPor: row.rechazado_por ?? null,
     rechazadoEn: row.rechazado_en ?? null,
     motivoRechazo: row.motivo_rechazo ?? null,
+    evaluacionIA: row.evaluacion_ia ?? null,
+    transcripcionIA: row.transcripcion_ia ?? null,
     creadoEn: row.creado_en,
   };
 }
@@ -288,6 +308,17 @@ export function rechazarGrabacion(id, { rechazadoPor, motivo } = {}) {
     )
     .run(String(rechazadoPor ?? '').trim() || null, motivoTexto.slice(0, 500), id);
 
+  return getGrabacionById(id);
+}
+
+/** Guarda la evaluación/transcripción IA para no tener que volver a llamar al webhook. */
+export function guardarEvaluacionGrabacion(id, { evaluacion, transcripcion } = {}) {
+  ensureSchema();
+  getDb()
+    .prepare(
+      `UPDATE promotor_grabaciones SET evaluacion_ia = ?, transcripcion_ia = ? WHERE id = ?`,
+    )
+    .run(String(evaluacion ?? ''), transcripcion != null ? String(transcripcion) : null, id);
   return getGrabacionById(id);
 }
 

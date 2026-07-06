@@ -1,12 +1,17 @@
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   aprobarGrabacion,
+  evaluarGrabacionExistenteIA,
   fetchGrabacionAudioBlob,
   fetchGrabacionesCumplimiento,
   rechazarGrabacion,
 } from '../../api/client';
 import type { FilaCumplimientoGrabaciones, GrabacionPromotor, SemaforoGrabacion } from '../../types';
 import { PromotorInformeFilter } from './PromotorInformeFilter';
+import {
+  EvaluacionGrabacionGuardada,
+  type EstadoEvaluacionGuardada,
+} from '../grabaciones/EvaluacionGrabacionGuardada';
 
 function estiloSemaforo(semaforo: SemaforoGrabacion): string {
   if (semaforo === 'verde') return 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200';
@@ -198,6 +203,44 @@ function DetalleGrabaciones({
 }) {
   const [procesandoId, setProcesandoId] = useState<number | null>(null);
   const [rechazoModal, setRechazoModal] = useState<GrabacionPromotor | null>(null);
+  const [evaluacionesGuardadas, setEvaluacionesGuardadas] = useState<
+    Record<number, EstadoEvaluacionGuardada>
+  >({});
+
+  useEffect(() => {
+    setEvaluacionesGuardadas((prev) => {
+      const next = { ...prev };
+      for (const g of grabaciones) {
+        if (g.evaluacionIA && !next[g.id]?.evaluacion) {
+          next[g.id] = {
+            cargando: false,
+            evaluacion: g.evaluacionIA,
+            transcripcion: g.transcripcionIA ?? undefined,
+          };
+        }
+      }
+      return next;
+    });
+  }, [grabaciones]);
+
+  const evaluarGrabacion = async (id: number) => {
+    setEvaluacionesGuardadas((prev) => ({ ...prev, [id]: { cargando: true } }));
+    try {
+      const data = await evaluarGrabacionExistenteIA(id);
+      setEvaluacionesGuardadas((prev) => ({
+        ...prev,
+        [id]: { cargando: false, evaluacion: data.evaluacion, transcripcion: data.transcripcion },
+      }));
+    } catch (err) {
+      setEvaluacionesGuardadas((prev) => ({
+        ...prev,
+        [id]: {
+          cargando: false,
+          error: err instanceof Error ? err.message : 'No se pudo evaluar el audio. Intentá de nuevo.',
+        },
+      }));
+    }
+  };
 
   const handleAprobar = async (id: number) => {
     setProcesandoId(id);
@@ -296,6 +339,12 @@ function DetalleGrabaciones({
               Rechazado{g.motivoRechazo ? `: ${g.motivoRechazo}` : ''}
             </span>
           )}
+          <div className="w-full">
+            <EvaluacionGrabacionGuardada
+              estado={evaluacionesGuardadas[g.id]}
+              onEvaluar={() => void evaluarGrabacion(g.id)}
+            />
+          </div>
         </li>
       ))}
       </ul>

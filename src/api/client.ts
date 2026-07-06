@@ -646,6 +646,10 @@ export async function fetchMisGrabaciones(fecha?: string): Promise<GrabacionesMi
           rechazadoEn: null,
           motivoRechazo: null,
           creadoEn: `${diaKey} 10:32:00`,
+          evaluacionIA:
+            'Buen manejo del speech: se presentó, mencionó el sorteo y ofreció el QR. Podría mejorar el cierre pidiendo el teléfono de forma más directa.',
+          transcripcionIA:
+            'Hola muy buenos días, le invito a participar gratis de un sorteo por dos motos y un terreno, es simple escaneando este QR usted ya está participando, ¿le gustaría?',
         },
         {
           id: 3,
@@ -818,6 +822,10 @@ export async function fetchGrabacionesCumplimiento(
             rechazadoEn: null,
             motivoRechazo: null,
             creadoEn: `${diaKey} 09:20:00`,
+            evaluacionIA:
+              'Entrevista completa, explicó el plan de pago con claridad y respondió dudas del cliente. Faltó confirmar el horario de la próxima visita.',
+            transcripcionIA:
+              'Buenas tardes, le comento cómo funciona el plan de pago del terreno: puede abonar de contado o financiado en cuotas...',
           },
         ],
       },

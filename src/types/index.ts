@@ -583,6 +583,9 @@ export interface GrabacionPromotor {
   creadoEn: string;
   /** false = el archivo no está en disco (registro huérfano en SQLite). */
   archivoDisponible?: boolean;
+  /** Evaluación IA ya guardada (no requiere volver a llamar al webhook). */
+  evaluacionIA?: string | null;
+  transcripcionIA?: string | null;
 }
 
 export interface ResumenGrabacionesDia {

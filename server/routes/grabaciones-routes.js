@@ -30,6 +30,7 @@ import {
   rechazarGrabacion,
   resumenPromotorDia,
   resumenTopeMesPromotor,
+  guardarEvaluacionGrabacion,
 } from '../db/grabaciones-store.js';
 import { calcularFranja, fechaDiaKey, fechaMesKey } from '../domain/grabaciones.js';
 import {
@@ -392,6 +393,13 @@ export function registerGrabacionesRoutes(api, { usuarioDesdeRequest }) {
       return res.status(403).json({ message: 'Sin permiso' });
     }
 
+    if (grabacion.evaluacionIA) {
+      return res.status(200).json({
+        evaluacion: grabacion.evaluacionIA,
+        transcripcion: grabacion.transcripcionIA ?? undefined,
+      });
+    }
+
     const resolved = resolveStoragePath(grabacion.storagePath);
     if (!resolved) {
       return res.status(404).json({ message: 'Archivo no encontrado en el servidor' });
@@ -404,6 +412,9 @@ export function registerGrabacionesRoutes(api, { usuarioDesdeRequest }) {
       filename,
       grabacion.mimeType || 'audio/mpeg',
     );
+    if (status === 200 && typeof body.evaluacion === 'string') {
+      guardarEvaluacionGrabacion(id, { evaluacion: body.evaluacion, transcripcion: body.transcripcion });
+    }
     return res.status(status).json(body);
   });
 
