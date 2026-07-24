@@ -118,7 +118,7 @@ export function LeadsPanel({
   productos,
   barrios,
   onActualizarLead,
-  onLeadActualizado,
+  onLeadActualizado: _onLeadActualizado,
   onCrearLead,
   onModificarTelefonoLead,
   leadIdSeguimientoInicial,
@@ -310,6 +310,11 @@ export function LeadsPanel({
     return result;
   };
 
+  /** Compat: SwipeableLeadCard exige Promise<void> (no el result). */
+  const quickSaveSeguimiento = async (leadId: string, seg: SeguimientoLead) => {
+    await guardarSeguimientoLead(leadId, seg);
+  };
+
   const handleWhatsAppAutoContacto = async (lead: Lead) => {
     if (prioridadTabInicial(lead) === 2) {
       const seg: SeguimientoLead = {
@@ -339,7 +344,7 @@ export function LeadsPanel({
         nombreUsuario={nombreUsuario}
         ocultarPromotor
         rolUsuario={rolUsuario}
-        onQuickSave={guardarSeguimientoLead}
+        onQuickSave={quickSaveSeguimiento}
         historial={historialPorLead[lead.id] ?? []}
         onModificarTelefono={abrirModificarTelefono}
         fetchHistorial={fetchHistorial}
@@ -487,7 +492,7 @@ export function LeadsPanel({
                     nombreUsuario={nombreUsuario}
                     ocultarPromotor
                     rolUsuario={rolUsuario}
-                    onQuickSave={guardarSeguimientoLead}
+                    onQuickSave={quickSaveSeguimiento}
                     historial={historialPorLead[lead.id] ?? []}
                     onModificarTelefono={abrirModificarTelefono}
                     fetchHistorial={fetchHistorial}
@@ -694,10 +699,6 @@ export function LeadsPanel({
           } else if (seg.resultadoEntrevista === 'sin_interes') {
             setTabActivo('contacto');
           }
-        }}
-        onLeadUpdated={(updated) => {
-          setLeadSeleccionado(updated);
-          onLeadActualizado?.(updated);
         }}
       />
 
