@@ -678,9 +678,9 @@ export function SuperadminDashboard({ data, periodo, onCambiarPeriodo, cargando 
           ? [promotor.promotorId]
           : promotoresFiltradosRanking.map((p) => p.promotorId);
         const detalle = extraerVentasDetalleInforme(leadsData, promotorIds, periodo);
-        if (tipo === 'pij') itemsPij = detalle.detallePij;
-        else if (tipo === 'terreno100') itemsTerreno = detalle.detalleTerreno100;
-        else itemsTerreno = detalle.detalleTerrenoSena;
+        if (tipo === 'pij') itemsPij = detalle.pij;
+        else if (tipo === 'terreno100') itemsTerreno = detalle.terreno100;
+        else itemsTerreno = detalle.terrenoSena;
         abrirModal(itemsPij, itemsTerreno);
       } catch (err) {
         console.error('Error al cargar detalle de ventas del informe:', err);
