@@ -1,0 +1,21 @@
+---
+description: Regla de negocio referidos → descuento de cuotas que debe impactar en caja
+globs: server/services/caja-*.js,server/services/caja-payload.js,src/**/*referido*,docs/**/*REFERIDO*,docs/**/*CAJA*
+alwaysApply: false
+---
+
+# Referidos → descuento cuotas (Caja)
+
+Al trabajar payload CRM→caja, confirmaciones o referidos, respetar esta regla de negocio (detalle en `docs/REFERIDOS_DESCUENTO_CUOTAS_CAJA.md`):
+
+## Plan Inversión Joven
+
+Si un cliente brinda referidos y ese referido compra un **Plan Inversión Joven** o un **terreno**, se le descuentan **dos cuotas por única vez**: la **cuota 11** y la **cuota 12**.
+
+## Terreno
+
+El cliente puede brindar **6 referidos**. Si uno de esos referidos compra un **terreno**, se le descuentan **2 cuotas** (las **últimas** del terreno). Si los **6** compran, se le descuentan **12 cuotas** (2 por referido).
+
+## Impacto Caja
+
+Hay que mandar a caja que el cliente que es **referido** le corresponde a un cliente por el **id del lead** (titular que lo brindó), para que caja **descuente automáticamente** esas 2 cuotas (o hasta 12 en terreno).
