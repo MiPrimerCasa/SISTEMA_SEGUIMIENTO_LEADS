@@ -653,13 +653,7 @@ export function LeadsPanel({
         todosLosLeads={leads}
         soloLectura={
           leadSeleccionado != null &&
-          (leadSoloLecturaUltimoModificador(
-            leadSeleccionado,
-            usuario?.idOperador ?? usuario?.id,
-            rolUsuario,
-            operadorIdsSesion,
-            historialPorLead[leadSeleccionado.id] ?? [],
-          ) ||
+          (leadSoloLecturaUltimoModificador(leadSeleccionado, usuario?.idOperador ?? usuario?.id, rolUsuario) ||
             (esPromotor
               ? leadSoloLecturaPromotor(
                   leadSeleccionado,

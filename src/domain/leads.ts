@@ -107,9 +107,6 @@ export function etiquetaSeguimientoAgendaOtroRol(
 
 export function leadSoloLecturaSupervisor(lead: Lead) {
   if (lead.bloqueadoSupervisor48h) return true;
-  // Tras el cierre, el supervisor puede abrir el lead (completar fotos/DNI/medio de pago para caja).
-  // La protección de cita del promotor aplica al pipeline previo, no al post-venta.
-  if (leadCompro(lead)) return false;
   if (leadSeguimientoPijPromotor(lead)) return true;
   if (
     leadTieneCitaPrevia(lead) &&
@@ -448,33 +445,19 @@ export function leadSoloLecturaUltimoModificador(
   lead: Lead | null | undefined,
   currentUserId: string | number | undefined | null,
   userRole?: string | null,
-  /** ids alternativos de la sesión (id / idOperador / idVendedor) */
-  currentUserIds: Array<string | number | null | undefined> = [],
-  historial: SeguimientoHistorialEntry[] = [],
 ): boolean {
   if (!lead?.seguimiento?.operadorId) {
     // Si no tiene operadorId de seguimiento previo, cualquiera puede gestionarlo.
     return false;
   }
-  const esSupervisor =
-    userRole === 'supervisor' || userRole === 'superadmin';
   // Derivación terreno: el supervisor puede gestionar aunque no sea el último operador
-  if (leadDerivacionTerrenoSupervisorActiva(lead) && esSupervisor) {
-    return false;
-  }
-  // Cierre hecho por supervisor: puede volver a editarlo (fotos/DNI/pago) aunque
-  // el último operadorId guardado sea el del promotor del lead.
   if (
-    esSupervisor &&
-    leadCierreRegistradoSupervisor(lead, historial)
+    leadDerivacionTerrenoSupervisorActiva(lead) &&
+    (userRole === 'supervisor' || userRole === 'superadmin')
   ) {
     return false;
   }
-  const idsSesion = [currentUserId, ...currentUserIds]
-    .map((v) => String(v ?? '').trim())
-    .filter(Boolean);
-  if (idsSesion.length === 0) return false;
-  const ultimo = String(lead.seguimiento.operadorId).trim();
-  return !idsSesion.includes(ultimo);
+  if (!currentUserId) return false;
+  return String(lead.seguimiento.operadorId) !== String(currentUserId);
 }
 
