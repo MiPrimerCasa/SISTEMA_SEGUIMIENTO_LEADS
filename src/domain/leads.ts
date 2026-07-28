@@ -106,8 +106,12 @@ export function etiquetaSeguimientoAgendaOtroRol(
 }
 
 export function leadSoloLecturaSupervisor(lead: Lead) {
+  // Prioridad promotor 48hs: no se toca (sigue bloqueando al supervisor).
   if (lead.bloqueadoSupervisor48h) return true;
   if (leadSeguimientoPijPromotor(lead)) return true;
+  // Ya cerrado: el supervisor puede abrir aunque el lead haya tenido cita previa del promotor
+  // (completar documentación / datos de caja). La cita previa solo protege el pipeline pre-venta.
+  if (leadCompro(lead)) return false;
   if (
     leadTieneCitaPrevia(lead) &&
     lead.cargadoPorRol === 'promotor' &&
@@ -445,16 +449,20 @@ export function leadSoloLecturaUltimoModificador(
   lead: Lead | null | undefined,
   currentUserId: string | number | undefined | null,
   userRole?: string | null,
+  historial: SeguimientoHistorialEntry[] = [],
 ): boolean {
   if (!lead?.seguimiento?.operadorId) {
     // Si no tiene operadorId de seguimiento previo, cualquiera puede gestionarlo.
     return false;
   }
+  const esSupervisor =
+    userRole === 'supervisor' || userRole === 'superadmin';
   // Derivación terreno: el supervisor puede gestionar aunque no sea el último operador
-  if (
-    leadDerivacionTerrenoSupervisorActiva(lead) &&
-    (userRole === 'supervisor' || userRole === 'superadmin')
-  ) {
+  if (leadDerivacionTerrenoSupervisorActiva(lead) && esSupervisor) {
+    return false;
+  }
+  // Cierre del supervisor: puede editar docs aunque operadorId haya quedado en el promotor.
+  if (esSupervisor && leadCierreRegistradoSupervisor(lead, historial)) {
     return false;
   }
   if (!currentUserId) return false;
