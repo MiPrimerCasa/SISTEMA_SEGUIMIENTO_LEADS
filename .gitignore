@@ -39,6 +39,7 @@ __pycache__/
 server/data/app-cache.db
 data/backups/
 data/grabaciones/
+data/feedback/
 server/backups/
 
 # Archivos de datos temporales y scratch
