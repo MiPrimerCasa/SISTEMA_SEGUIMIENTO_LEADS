@@ -118,14 +118,6 @@ export function codigoSorteoLinksDesdeSesion(usuario) {
 }
 
 /**
- * Código SORTEO para consultar stock PIJ en erp-sync (crmPromotorCodigo).
- * Nunca usa loginId numérico. Supervisores: prioriza …Sxx00 (acta C+).
- */
-export function codigoCrmStockPijDesdeSesion(usuario) {
-  return codigoSorteoLinksDesdeSesion(usuario);
-}
-
-/**
  * Código CRM para consultar stock PIJ C+ en erp-sync.
  * Nunca usa loginId numérico. Supervisores-vendedores: preferir …Sxx00 (acta C+).
  */
