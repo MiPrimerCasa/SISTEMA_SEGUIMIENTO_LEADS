@@ -117,6 +117,35 @@ export function codigoSorteoLinksDesdeSesion(usuario) {
   return null;
 }
 
+/**
+ * Código SORTEO para consultar stock PIJ en erp-sync (crmPromotorCodigo).
+ * Nunca usa loginId numérico. Supervisores: prioriza …Sxx00 (acta C+).
+ */
+export function codigoCrmStockPijDesdeSesion(usuario) {
+  return codigoSorteoLinksDesdeSesion(usuario);
+}
+
+/**
+ * Código CRM para consultar stock PIJ C+ en erp-sync.
+ * Nunca usa loginId numérico. Supervisores-vendedores: preferir …Sxx00 (acta C+).
+ */
+export function codigoCrmStockPijDesdeSesion(usuario) {
+  if (!usuario) return null;
+  const rol = usuario.rol;
+  const candidatos =
+    rol === 'supervisor'
+      ? [usuario.codigoSupervisor, usuario.codigoCarga, usuario.codigoPromotor]
+      : rol === 'promotor'
+        ? [usuario.codigoPromotor, usuario.codigoCarga]
+        : [usuario.codigoCarga, usuario.codigoPromotor, usuario.codigoSupervisor];
+
+  for (const c of candidatos) {
+    const norm = extraerCodigoSorteoDeTexto(c);
+    if (esCodigoUsuarioCargaValido(norm)) return norm;
+  }
+  return null;
+}
+
 export function resolverCodigoCargaDesdeFilaLogin(row, rol) {
   const { codigoPromotor, codigoSupervisor } = extraerCodigosSorteoDesdeFilaLogin(row);
   if (rol === 'promotor' && esCodigoUsuarioCargaValido(codigoPromotor)) {
