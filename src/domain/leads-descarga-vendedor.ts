@@ -36,8 +36,17 @@ function fuenteDesdeOrigenEncuesta(raw: string | undefined): FuenteLead | null {
 }
 
 export function fuenteLeadDescarga(lead: Lead): FuenteLead | null {
-  const guardada = lead.seguimiento?.fuente;
-  if (guardada === 'qr' || guardada === 'app' || FUENTES_REDES.has(guardada)) return guardada;
+  const guardada = lead.seguimiento?.fuente ?? null;
+  if (
+    guardada === 'qr' ||
+    guardada === 'app' ||
+    guardada === 'facebook' ||
+    guardada === 'instagram' ||
+    guardada === 'whatsapp' ||
+    guardada === 'tiktok'
+  ) {
+    return guardada;
+  }
   return fuenteDesdeOrigenEncuesta(lead.origenEncuesta);
 }
 
